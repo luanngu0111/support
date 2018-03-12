@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<workflow xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+ xsi:noNamespaceSchemaLocation="workflow.xsd" id="POST_EOD">
+	<state id="sFEED_STG_CS" mode="sequence">
+
+		<state id="sFEED_STG_CS_MAIN" mode="parallel">
+
+			<state id="sFEED_STG_CS_P_TODAY" mode="parallel">
+				<action id="aFEED_STG_CS_P_TODAY" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-CS-P-TODAY"/>
+				</action>
+			</state>
+
+			<state id="sFEED_STG_CS_D_TODAY" mode="parallel">
+				<action id="STG_CS_D_TODAY_01" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-CS-D-TODAY-01"/>
+				</action>
+
+				<action id="STG_CS_D_TODAY_02" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-CS-D-TODAY-02"/>
+				</action>
+
+				<action id="STG_CS_D_TODAY_03" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-CS-D-TODAY-03"/>
+				</action>
+
+				<action id="STG_CS_D_TODAY_04" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-CS-D-TODAY-04"/>
+				</action>
+			</state>
+
+			<state id="sFEED_STG_CS_P_YEST" mode="parallel">
+				<action id="aFEED_STG_CS_P_YEST" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-CS-P-YST"/>
+				</action>
+			</state>
+
+			<state id="sFEED_STG_CS_D_YEST" mode="parallel">
+				<action id="STG_CS_D_YEST_01" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-CS-D-YEST-01"/>
+				</action>
+
+				<action id="STG_CS_D_YEST_02" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-CS-D-YEST-02"/>
+				</action>
+
+				<action id="STG_CS_D_YEST_03" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-CS-D-YEST-03"/>
+				</action>
+			</state>
+
+		</state>
+
+		<state id="sFEED_STG_CS_INDEX" mode="parallel">
+			<action id="aFEED_STG_CS_INDEX" package="MX::Action::ExecuteCmd">
+				<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_CREATE_INDEX 'Y', 'STG_CS_REP''"/>
+			</action>
+		</state>
+	</state>
+</workflow>

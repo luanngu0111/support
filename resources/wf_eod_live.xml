@@ -1,0 +1,1983 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<workflow xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:noNamespaceSchemaLocation="workflow.xsd" id="POST_EOD">
+ 
+<state id="sEOD_LIVE" mode="sequence">
+ 
+ 	<state id="sEMAIL_START" mode="sequence">
+ 		<action id="aEMAIL_START" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="cat /dev/null | mailx -s'DATAMART - EOD LIVE - Starting' $DATAMART_MAILTO"></param>
+ 		</action>
+ 		
+		<action id="aNAGIOS_START" package="MX::Action::ExecuteCmd">
+			<param name="cmd" value="$MXBIN/TOOLS/NAGIOS/nagios_msg.sh I 'DATAMART - EOD LIVE' wf_eod_live.xml 103"></param>
+		</action>
+ 	</state>
+ 
+ 	<state id="sMARKER_START" mode="sequence">
+ 		<action id="aMARKER_START" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-WF-EOD-LIVE-START"></param>
+ 		</action>
+ 	</state>
+ 
+ 	<state id="sCHECK_DATE" mode="sequence">
+ 		<action id="aODS_CHK_DATE" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_DATE'"></param>
+ 		</action>
+ 	</state>
+ 
+ 	<state id="sDATE_INIT" mode="sequence">
+ 		<action id="aTRUNCATE_STG_DATE" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_TRUNCATE_DATE 'Y''"></param>
+ 		</action>
+ 
+ 		<action id="aTRUNCATE_ODS_DATE" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_TRUNCATE_DATE 'Y''"></param>
+ 		</action>
+ 
+		<action id="aSTG_DATE_OIS" package="MX::Action::ExecuteCmd">
+			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-DATE-OIS"></param>
+		</action>
+ 
+ 		<action id="aSTG_DATE" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-DATE"></param>
+ 		</action>
+ 
+ 		<action id="aODS_VALIDATE_CHKZERO_DATE" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_ZERO_DATE'"></param>
+ 		</action>
+ 
+ 		<action id="aODS_LOAD_EOD_DATE" package="MX::Action::ExecuteCmd">
+			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_LOAD_EOD_LIVE_DATE'"></param>
+ 		</action>
+ 
+ 		<action id="aODS_VALIDATE_MULTIPLE_DATE" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_MULTIPLE_DATE'"></param>
+ 		</action>			
+		
+ 	</state>
+ 
+    <state id="sSTG_WAIT_COMPTA_PLCOMP" mode="parallel">
+		<action id="aEOD_COMPTA_LIVE_KEY" package="MX::Action::ExecuteCmd">
+			<param name="cmd" value="$MXBIN/utils/mx_launch_wait.pl WAIT_KEY $MXKEY/EOD-COMPTA-DONE.key 45"></param>
+        </action>
+		
+		<action id="aEOD_PLCOMP_LIVE_KEY" package="MX::Action::ExecuteCmd">
+			<param name="cmd" value="$MXBIN/utils/mx_launch_wait.pl WAIT_KEY $MXKEY/EOD-PLCOMPUTE-DONE.key 45"></param>
+        </action>
+	</state>	
+ 
+ 	<state id="sSTG_TRUNCATE" mode="parallel">
+		<!--  Murex part -->
+		<action id="aDM_TRUNCATE_DM_CVPRC" package="MX::Action::ExecuteCmd">
+			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY -d $DBBASE -s 'exec MUREXDB.sp_DM_TRUNCATE_DM_CVPRC 'Y''"></param>
+		</action>
+
+		<action id="aDM_TRUNCATE_DM_CVSPT" package="MX::Action::ExecuteCmd">
+			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY -d $DBBASE -s 'exec MUREXDB.sp_DM_TRUNCATE_DM_CVSPT 'Y''"></param>
+		</action>
+
+		<action id="aDM_TRUNCATE_DM_CVUNI" package="MX::Action::ExecuteCmd">
+			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY -d $DBBASE -s 'exec MUREXDB.sp_DM_TRUNCATE_DM_CVUNI 'Y''"></param>
+		</action>
+
+		<action id="aDM_TRUNCATE_DM_DTSEC" package="MX::Action::ExecuteCmd">
+			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY -d $DBBASE -s 'exec MUREXDB.sp_DM_TRUNCATE_DM_DTSEC 'Y''"></param>
+		</action>
+
+		<action id="aDM_TRUNCATE_DM_RTNBD" package="MX::Action::ExecuteCmd">
+			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY -d $DBBASE -s 'exec MUREXDB.sp_DM_TRUNCATE_DM_RTNBD 'Y''"></param>
+		</action>
+
+		<!--  STG part -->
+		<action id="aSTG_TRUNCATE_CS" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_TRUNCATE_CS 'Y''"></param>
+ 		</action>
+ 
+ 		<action id="aSTG_TRUNCATE_CS_FUT" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_TRUNCATE_CS_FUT 'Y''"></param>
+ 		</action>
+ 		
+ 		<action id="aSTG_TRUNCATE_CS_EVAL" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_TRUNCATE_CS_EVAL 'Y''"></param>
+ 		</action>
+ 		
+ 		<action id="aSTG_TRUNCATE_CVPRC" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_TRUNCATE_CVPRC 'Y''"></param>
+ 		</action>
+ 
+ 		<action id="aSTG_TRUNCATE_CVSPT" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_TRUNCATE_CVSPT 'Y''"></param>
+ 		</action>
+ 
+ 		<action id="aSTG_TRUNCATE_DT" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_TRUNCATE_DT 'Y''"></param>
+ 		</action>
+ 
+ 		<action id="aSTG_TRUNCATE_DTSEC" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_TRUNCATE_DTSEC 'Y''"></param>
+ 		</action>
+ 
+ 		<action id="aSTG_TRUNCATE_DT_SV" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_TRUNCATE_DT_SV 'Y''"></param>
+ 		</action>
+ 		
+ 		<action id="aSTG_TRUNCATE_IRDRISK" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_TRUNCATE_IRDRISK 'Y''"></param>
+ 		</action>
+ 		
+ 		<action id="aSTG_TRUNCATE_IRDRISK_SPEC" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_TRUNCATE_IRDRISK_SPEC 'Y''"></param>
+ 		</action>	
+ 		
+ 		<action id="aSTG_TRUNCATE_COMRISK_SPEC" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_TRUNCATE_COMRISK_SPEC 'Y''"></param>
+ 		</action>	
+ 		
+ 		<action id="aSTG_TRUNCATE_CRDRISK_SPEC" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_TRUNCATE_CRDRISK_SPEC 'Y''"></param>
+ 		</action>
+ 		
+ 		<action id="aSTG_TRUNCATE_FXRISK_SPEC" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_TRUNCATE_FXRISK_SPEC 'Y''"></param>
+ 		</action>	
+ 		
+ 		<action id="aSTG_TRUNCATE_MKT_PRC_BND" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_TRUNCATE_MKT_PRIC_BND 'Y''"></param>
+ 		</action>
+ 
+ 		<action id="aSTG_TRUNCATE_MV" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_TRUNCATE_MV 'Y''"></param>
+ 		</action>
+ 
+ 		<action id="aSTG_TRUNCATE_PL" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_TRUNCATE_PL 'Y''"></param>
+ 		</action>
+ 
+ 		<action id="aSTG_TRUNCATE_PL_SV" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_TRUNCATE_PL_SV 'Y''"></param>
+ 		</action>
+ 
+		<action id="aSTG_TRUNCATE_RTNBD" package="MX::Action::ExecuteCmd">
+			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_TRUNCATE_RTNBD 'Y''"></param>
+		</action>
+
+ 		<action id="aSTG_TRUNCATE_SV" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_TRUNCATE_SV 'Y''"></param>
+ 		</action>
+ 		
+ 		<action id="aSTG_TRUNCATE_SV_CS01" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_TRUNCATE_SV_CS01 'Y''"></param>
+ 		</action>
+ 
+ 		<action id="aSTG_TRUNCATE_VAR_COM" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_TRUNCATE_VAR_COM 'Y''"></param>
+ 		</action>
+
+		<action id="aSTG_TRUNCATE_VAR_CURR" package="MX::Action::ExecuteCmd">
+			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_TRUNCATE_VAR_CURR 'Y''"></param>
+		</action>
+		
+ 		<action id="aSTG_TRUNCATE_VAR_EQD" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_TRUNCATE_VAR_EQD 'Y''"></param>
+ 		</action>
+ 
+ 		<action id="aSTG_TRUNCATE_VAR_SCN" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_TRUNCATE_VAR_SCN 'Y''"></param>
+ 		</action>
+ 		
+ 		<action id="aSTG_TRUNCATE_XG" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_TRUNCATE_XG 'Y''"></param>
+ 		</action>
+		
+		<action id="aSTG_TRUNCATE_VAR211_COM" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'sp_STG_TRUNCATE_VAR211_COM 'Y''"></param>
+ 		</action>
+		
+		<action id="aSTG_TRUNCATE_VAR211_CRD" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_TRUNCATE_VAR211_CRD 'Y''"></param>
+ 		</action>
+		
+		<action id="aSTG_TRUNCATE_VAR211_CURR" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_TRUNCATE_VAR211_CURR 'Y''"></param>
+ 		</action>
+		
+		<action id="aSTG_TRUNCATE_VAR211_IRD" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_TRUNCATE_VAR211_IRD 'Y''"></param>
+ 		</action>
+
+		<action id="aODS_TRUNCATE_MIFIDII" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_TRUNCATE_MIFIDII 'Y''"></param>
+ 		</action>
+
+ 	</state>
+ 
+ 	<state id="sSTG_DROP_INDEX" mode="parallel">
+ 		<action id="aSTG_DROP_INDEX_CS" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_DROP_INDEX 'Y', 'STG_CS_REP''"></param>
+ 		</action>
+ 
+		 <action id="aSTG_DROP_INDEX_CS_FUT" package="MX::Action::ExecuteCmd">
+			 <param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_DROP_INDEX 'Y', 'STG_CS_FUT_REP''"></param>
+		 </action>
+ 
+ 		<action id="aSTG_DROP_INDEX_CVPRC" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_DROP_INDEX 'Y', 'STG_CVPRC_REP''"></param>
+ 		</action>
+ 		
+ 		<action id="aSTG_DROP_INDEX_CVSPT" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_DROP_INDEX 'Y', 'STG_CVSPT_REP''"></param>
+ 		</action>
+ 
+ 		<action id="aSTG_DROP_INDEX_DT" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_DROP_INDEX 'Y', 'STG_DT_REP''"></param>
+ 		</action>
+ 
+ 		<action id="aSTG_DROP_INDEX_DTSEC" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_DROP_INDEX 'Y', 'STG_DTSEC_REP''"></param>
+ 		</action>
+ 
+ 		<action id="aSTG_DROP_INDEX_DT_SV" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_DROP_INDEX 'Y', 'STG_DT_SV_REP''"></param>
+ 		</action>
+ 
+ 		<action id="aSTG_DROP_INDEX_IRDRISK" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_DROP_INDEX 'Y', 'STG_IRDRISK_REP''"></param>
+ 		</action>
+ 		
+ 		<action id="aSTG_DROP_INDEX_MKT_PRIC_BND" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_DROP_INDEX 'Y', 'STG_MKT_PRIC_BND_REP''"></param>
+ 		</action>
+ 
+ 		<action id="aSTG_DROP_INDEX_MV" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_DROP_INDEX 'Y', 'STG_MV_REP''"></param>
+ 		</action>
+ 
+ 		<action id="aSTG_DROP_INDEX_PL" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_DROP_INDEX 'Y', 'STG_PL_REP''"></param>
+ 		</action>
+ 
+ 		<action id="aSTG_DROP_INDEX_PL_SV" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_DROP_INDEX 'Y', 'STG_PL_SV_REP''"></param>
+ 		</action>
+ 
+ 		<action id="aSTG_DROP_INDEX_SV" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_DROP_INDEX 'Y', 'STG_SV_REP''"></param>
+ 		</action>
+ 		
+ 		<action id="aSTG_DROP_INDEX_VAR_COM" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_DROP_INDEX 'Y', 'STG_VAR_COM_REP''"></param>
+ 		</action>
+
+		<action id="aSTG_DROP_INDEX_VAR_CURR" package="MX::Action::ExecuteCmd">
+			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_DROP_INDEX 'Y', 'STG_VAR_CURR_REP''"></param>
+		</action>
+ 
+ 		<action id="aSTG_DROP_INDEX_VAR_EQD" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_DROP_INDEX 'Y', 'STG_VAR_EQD_REP''"></param>
+ 		</action>
+ 
+ 		<action id="aSTG_DROP_INDEX_SCN_COM" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_DROP_INDEX 'Y', 'STG_VAR_SCN_REP''"></param>
+ 		</action>
+ 		
+ 		<action id="aSTG_DROP_INDEX_XG" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_DROP_INDEX 'Y', 'STG_XG_REP''"></param>
+ 		</action>
+ 	</state>
+
+	<state id="sSTG_FEED_MAIN" mode="parallel">
+		<state id="sSTG_FEED_MISC_ALL" mode="parallel">	
+			<state id="sSTG_FEED_MISC_MAIN" mode="sequence">				    		
+				 <state id="sSTG_FEED_MISC" mode="parallel">
+					<!-- CAUTION: Need to be first because we need to finish it before state PL (for index) -->
+					<action id="aSTG_FEED_PL_THEO" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 1;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-PL-THEO-YEST -r 3 -f -t 15"></param>
+					</action>
+										
+					<action id="aSTG_FEED_MKT_PRC_BND_04" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 2;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-MKT-PRIC-BND-04"></param>
+					</action>
+					
+					<action id="aSTG_FEED_IRDRISK_01" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 3;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-IRDRISK-L-YEST-01 -r 3 -f -t 15"></param>
+					</action>
+					
+					<action id="aSTG_FEED_IRDRISK_02" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 4;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-IRDRISK-L-YEST-02 -r 3 -f -t 15"></param>
+					</action>
+					
+					<action id="aSTG_FEED_IRDRISK_03" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 5;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-IRDRISK-L-YEST-03 -r 3 -f -t 15"></param>
+					</action>
+
+					<action id="aSTG_FEED_CRDRISK_SPEC_01" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 6;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-CRDRISK-SPEC-L-YEST-01 -r 3 -f -t 15"></param>
+					</action>			 					 								
+				 </state>						  
+				
+				 <state id="sSTG_FEED_MISC_INDEX" mode="parallel">
+					<action id="aSTG_FEED_CRDRISK_SPEC_INDEX" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 1;$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_CREATE_INDEX 'Y', 'STG_CRDRISK_SPEC_REP''"></param>
+					</action>
+
+					<action id="aSTG_FEED_IRDRISK_INDEX" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 2;$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_CREATE_INDEX 'Y', 'STG_IRDRISK_REP''"></param>
+					</action>		 		
+				 </state>					 
+			</state>
+			
+			<state id="sSTG_FEED_MISC_MAIN2" mode="sequence">
+				<state id="sSTG_FEED_MISC_2A" mode="parallel">
+					<action id="aSTG_FEED_MKT_PRC_BND_01" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 7;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-MKT-PRIC-BND-01"></param>
+					</action>	 										
+					
+					<action id="aSTG_FEED_MKT_PRC_BND_02" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 8;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-MKT-PRIC-BND-02"></param>
+					</action>						
+					
+					<action id="aSTG_FEED_MKT_PRC_BND_03" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 9;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-MKT-PRIC-BND-03"></param>
+					</action>	 						 					
+				</state>
+			
+				<state id="sSTG_FEED_MISC_INDEX_2B" mode="parallel">		 		
+				   <action id="aSTG_FEED_MKT_PRC_BND_INDEX" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_CREATE_INDEX 'Y', 'STG_MKT_PRIC_BND_REP''"></param>
+				   </action>
+				</state>
+			</state>					
+		</state>
+
+		<state id="sSTG_FEED_COM_RISK_SPEC_ALL" mode="sequence">
+			<state id="sSTG_FEED_COM_RISK_SPEC_MAIN" mode="parallel">
+				<action id="aSTG_FEED_COMRISK_SPEC_01" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="sleep 10;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-COMRISK-SPEC-L-YEST-01 -r 3 -f -t 15"></param>
+				</action>
+	
+				<action id="aSTG_FEED_COMRISK_SPEC_02" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="sleep 11;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-COMRISK-SPEC-L-YEST-02 -r 3 -f -t 15"></param>
+				</action>
+	
+				<action id="aSTG_FEED_COMRISK_SPEC_03" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="sleep 12;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-COMRISK-SPEC-L-YEST-03 -r 3 -f -t 15"></param>
+				</action>
+			</state>
+
+			<state id="sSTG_FEED_COM_RISK_SPEC_INDEX_ALL" mode="parallel">
+				<action id="aSTG_FEED_COMRISK_SPEC_INDEX" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_CREATE_INDEX 'Y', 'STG_COMRISK_SPEC_REP''"></param>
+				</action>
+			</state>
+		</state>
+
+		<state id="sSTG_FEED_CS_ALL" mode="sequence">
+			<state id="sSTG_FEED_CS_MAIN" mode="parallel">
+				<state id="sSTG_FEED_CS_OM" mode="parallel">	
+					<action id="aSTG_FEED_CS_OM_01" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 13;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-CS-OM-01 -r 3 -f -t 15"></param>
+					</action>
+		
+					<action id="aSTG_FEED_CS_OM_02" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 14;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-CS-OM-02 -r 3 -f -t 15"></param>
+					</action>
+					
+					<action id="aSTG_FEED_CS_OM_03" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 15;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-CS-OM-03 -r 3 -f -t 15"></param>
+					</action>	
+					
+					<action id="aSTG_FEED_CS_OM_04" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 16;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-CS-OM-04 -r 3 -f -t 15"></param>
+					</action>	
+					
+					<action id="aSTG_FEED_CS_OM_05" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 17;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-CS-OM-05 -r 3 -f -t 15"></param>
+					</action>	
+				</state>
+
+				<state id="sSTG_FEED_CS_TODAY" mode="parallel">	
+					<action id="STG_CS_TODAY_01" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 18;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-CS-TODAY-01 -r 3 -f -t 15"></param>
+					</action>
+		
+					<action id="STG_CS_TODAY_02" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 19;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-CS-TODAY-02 -r 3 -f -t 15"></param>
+					</action>
+					
+					<action id="STG_CS_TODAY_03" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 20;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-CS-TODAY-03 -r 3 -f -t 15"></param>
+					</action>
+					
+					<action id="STG_CS_TODAY_04" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 21;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-CS-TODAY-04 -r 3 -f -t 15"></param>
+					</action>
+					
+					<action id="STG_CS_TODAY_05" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 22;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-CS-TODAY-05 -r 3 -f -t 15"></param>
+					</action>
+					
+					<action id="STG_CS_TODAY_06" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 23;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-CS-TODAY-06 -r 3 -f -t 15"></param>
+					</action>
+				</state>
+
+				<state id="sSTG_FEED_CS_OTHER" mode="sequence">
+					<action id="STG_CS_EVAL_01" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 24;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-CS-EVAL-01 -r 3 -f -t 15"></param>
+					</action>					
+					
+					<action id="STG_CS_TO_PLUS1_01" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-CS-TO-PLUS1-01 -r 3 -f -t 15"></param>
+					</action>					
+					
+					<action id="STG_CS_TO_PLUS2_01" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-CS-TO-PLUS2-01 -r 3 -f -t 15"></param>
+					</action>					
+					
+					<action id="STG_CS_TO_PLUS3_01" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-CS-TO-PLUS3-01 -r 3 -f -t 15"></param>
+					</action>			
+					
+					<action id="STG_CS_TO_PLUS4_01" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-CS-TO-PLUS4-01 -r 3 -f -t 15"></param>
+					</action>					
+					
+					<action id="STG_CS_TO_PLUS5_01" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-CS-TO-PLUS5-01 -r 3 -f -t 15"></param>
+					</action>
+					
+					<action id="aSTG_FEED_CS_FUT_L_Y_1" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-CS-FUT-L-Y-1 -r 3 -f -t 15"></param>
+					</action>
+					
+					<action id="aSTG_FEED_CS_FUT_OM_01" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-CS-FUT-OM-01 -r 3 -f -t 15"></param>
+					</action>
+				</state>
+			</state>
+			
+			<state id="sSTG_FEED_CS_INDEX_ALL" mode="parallel">
+				<action id="aSTG_FEED_CS_INDEX" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_CREATE_INDEX 'Y', 'STG_CS_REP''"></param>
+				</action>
+	 
+				<action id="aSTG_FEED_CS_FUT_INDEX" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_CREATE_INDEX 'Y', 'STG_CS_FUT_REP''"></param>
+				</action>
+			</state>
+		</state>
+				
+		<state id="sSTG_FEED_DT_ALL" mode="sequence">
+			<state id="sSTG_FEED_DT_MAIN" mode="sequence">
+				<state id="sSTG_FEED_DT_01" mode="parallel">
+					<action id="STG_DT_OM_01" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 30;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-DT-OM-01 -r 3 -f -t 15"></param>
+					</action>
+					
+					<action id="STG_DT_OM_02" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 31;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-DT-OM-02 -r 3 -f -t 15"></param>
+					</action>
+				</state>
+
+				<state id="sSTG_FEED_DT_02" mode="parallel">
+					<action id="aSTG_FEED_DT_SV" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-DT-SV-YEST -r 3 -f -t 15"></param>
+					</action>
+				</state>
+			</state>
+
+			<state id="sSTG_FEED_DT_INDEX_ALL" mode="parallel">
+				<action id="aSTG_FEED_DT_INDEX" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_CREATE_INDEX 'Y', 'STG_DT_REP''"></param>
+				</action>
+
+				<action id="aSTG_FEED_DT_SV_INDEX" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_CREATE_INDEX 'Y', 'STG_DT_SV_REP''"></param>
+				</action>
+			</state>
+		</state>
+	
+		<state id="sSTG_FEED_FX_RISK_SPEC_ALL" mode="sequence">
+			<state id="sSTG_FEED_FX_RISK_SPEC_MAIN" mode="parallel">
+				<action id="aSTG_FEED_FXRISK_SPEC_01" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="sleep 900;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-FXRISK-SPEC-L-YEST-01 -r 3 -f -t 15"></param>
+				</action>
+	
+				<action id="aSTG_FEED_FXRISK_SPEC_02" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="sleep 960;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-FXRISK-SPEC-L-YEST-02 -r 3 -f -t 15"></param>
+				</action>
+		
+				<action id="aSTG_FEED_FXRISK_SPEC_03" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="sleep 1020;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-FXRISK-SPEC-L-YEST-03 -r 3 -f -t 15"></param>
+				</action>
+				
+				<action id="aSTG_FEED_FXRISK_SPEC_04" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="sleep 1080;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-FXRISK-SPEC-L-YEST-04 -r 3 -f -t 15"></param>
+				</action>
+				
+				<action id="aSTG_FEED_FXRISK_SPEC_05" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="sleep 1140;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-FXRISK-SPEC-L-YEST-05 -r 3 -f -t 15"></param>
+				</action>
+	
+				<action id="aSTG_FEED_FXRISK_SPEC_06" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="sleep 1200;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-FXRISK-SPEC-L-YEST-06 -r 3 -f -t 15"></param>
+				</action>
+
+				<action id="aSTG_FEED_FXRISK_SPEC_07" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="sleep 1260;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-FXRISK-SPEC-L-YEST-07 -r 3 -f -t 15"></param>
+				</action>
+			</state>
+
+			<state id="sSTG_FEED_FX_RISK_SPEC_INDEX_ALL" mode="parallel">
+				<action id="aSTG_FEED_FXRISK_SPEC_INDEX" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_CREATE_INDEX 'Y', 'STG_FXRISK_SPEC_REP''"></param>
+				</action>
+			</state>
+		</state>
+
+		<state id="sSTG_FEED_IRD_RISK_SPEC_ALL" mode="sequence">
+			<state id="sSTG_FEED_IRD_RISK_SPEC_MAIN" mode="parallel">
+				<action id="aSTG_FEED_IRDRISK_SPEC_01" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="sleep 33;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-IRDRISK-SPEC-L-YEST-01 -r 3 -f -t 15"></param>
+				</action>
+	
+				<action id="aSTG_FEED_IRDRISK_SPEC_02" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="sleep 34;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-IRDRISK-SPEC-L-YEST-02 -r 3 -f -t 15"></param>
+				</action>
+	
+				<action id="aSTG_FEED_IRDRISK_SPEC_03" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="sleep 35;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-IRDRISK-SPEC-L-YEST-03 -r 3 -f -t 15"></param>
+				</action>	
+				
+				<action id="aSTG_FEED_IRDRISK_SPEC_04" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="sleep 36;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-IRDRISK-SPEC-L-YEST-04 -r 3 -f -t 15"></param>
+				</action>
+	
+				<action id="aSTG_FEED_IRDRISK_SPEC_05" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="sleep 37;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-IRDRISK-SPEC-L-YEST-05 -r 3 -f -t 15"></param>
+				</action>
+
+				<action id="aSTG_FEED_IRDRISK_SPEC_06" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="sleep 38;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-IRDRISK-SPEC-L-YEST-06 -r 3 -f -t 15"></param>
+				</action>
+
+				<action id="aSTG_FEED_IRDRISK_SPEC_07" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="sleep 39;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-IRDRISK-SPEC-L-YEST-07 -r 3 -f -t 15"></param>
+				</action>
+			</state>
+
+			<state id="sSTG_FEED_IRD_RISK_SPEC_INDEX_ALL" mode="parallel">
+				<action id="aSTG_FEED_IRDRISK_SPEC_INDEX" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_CREATE_INDEX 'Y', 'STG_IRDRISK_SPEC_REP''"></param>
+				</action>
+			</state>
+		</state>
+
+		<state id="sSTG_FEED_PL_ALL" mode="sequence">
+			<state id="sSTG_FEED_PL_MAIN" mode="parallel">
+				<state id="sSTG_FEED_PL_OIS_YEST" mode="parallel">
+					<action id="aSTG_FEED_PL_OIS_YEST" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 40;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-PL-OIS-YEST -r 3 -f -t 15"></param>
+					</action>
+				</state>
+			
+				<state id="sSTG_FEED_PL_OM-1" mode="parallel">
+					<action id="aSTG_FEED_PL_OM-1_01" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 41;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-PL-OM-1-01 -r 3 -f -t 15"></param>
+					</action>
+		
+					<action id="aSTG_FEED_PL_OM-1_02" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 42;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-PL-OM-1-02 -r 3 -f -t 15"></param>
+					</action>
+		
+					<action id="aSTG_FEED_PL_OM-1_03" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 43;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-PL-OM-1-03 -r 3 -f -t 15"></param>
+					</action>
+		
+					<action id="aSTG_FEED_PL_OM-1_04" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 44;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-PL-OM-1-04 -r 3 -f -t 15"></param>
+					</action>
+		
+					<action id="aSTG_FEED_PL_OM-1_05" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 45;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-PL-OM-1-05 -r 3 -f -t 15"></param>
+					</action>
+		
+					<action id="aSTG_FEED_PL_OM-1_06" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 46;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-PL-OM-1-06 -r 3 -f -t 15"></param>
+					</action>
+				</state>
+
+				<state id="sSTG_FEED_PL_2OM" mode="parallel">
+					<action id="aSTG_FEED_PL_2OM_01" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 47;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-PL-2OM-01 -r 3 -f -t 15"></param>
+					</action>
+		
+					<action id="aSTG_FEED_PL_2OM_02" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 48;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-PL-2OM-02 -r 3 -f -t 15"></param>
+					</action>
+		
+					<action id="aSTG_FEED_PL_2OM_03" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 49;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-PL-2OM-03 -r 3 -f -t 15"></param>
+					</action>
+		
+					<action id="aSTG_FEED_PL_2OM_04" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 50;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-PL-2OM-04 -r 3 -f -t 15"></param>
+					</action>
+
+					<action id="aSTG_FEED_PL_2OM_05" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 51;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-PL-2OM-05 -r 3 -f -t 15"></param>
+					</action>
+				</state>
+			</state>
+
+			<state id="sSTG_FEED_PL_INDEX_ALL" mode="parallel">
+				<action id="aSTG_FEED_PL_INDEX" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_CREATE_INDEX 'Y', 'STG_PL_REP''"></param>
+				</action>
+			</state>
+		</state>
+
+		<state id="sSTG_FEED_PL_SV_ALL" mode="sequence">
+			<state id="sSTG_FEED_PL_SV_MAIN" mode="parallel">
+				<state id="sSTG_FEED_PL_SV_YEST" mode="parallel">
+					<action id="aSTG_FEED_PL_SV_YEST_01" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 60;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-PL-SV-YEST-01 -r 3 -f -t 15"></param>
+					</action>
+		
+					<action id="aSTG_FEED_PL_SV_YEST_02" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 61;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-PL-SV-YEST-02 -r 3 -f -t 15"></param>
+					</action>
+		
+					<action id="aSTG_FEED_PL_SV_YEST_03" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 62;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-PL-SV-YEST-03 -r 3 -f -t 15"></param>
+					</action>
+		
+					<action id="aSTG_FEED_PL_SV_YEST_04" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 63;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-PL-SV-YEST-04 -r 3 -f -t 15"></param>
+					</action>
+					
+					<action id="aSTG_FEED_PL_SV_YEST_05" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 64;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-PL-SV-YEST-05 -r 3 -f -t 15"></param>
+					</action>
+
+					<action id="aSTG_FEED_PL_SV_YEST_06" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 65;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-PL-SV-YEST-06 -r 3 -f -t 15"></param>
+					</action>
+				</state>
+
+				<state id="sSTG_FEED_PL_SV_L_YEST-1" mode="parallel">
+					<action id="aSTG_FEED_PL_SV_L_YEST-1_01" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 66;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-PL-SV-L-YEST-1-01 -r 3 -f -t 15"></param>
+					</action>
+		
+					<action id="aSTG_FEED_PL_SV_L_YEST-1_02" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 67;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-PL-SV-L-YEST-1-02 -r 3 -f -t 15"></param>
+					</action>
+		
+					<action id="aSTG_FEED_PL_SV_L_YEST-1_03" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 68;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-PL-SV-L-YEST-1-03 -r 3 -f -t 15"></param>
+					</action>
+		
+					<action id="aSTG_FEED_PL_SV_L_YEST-1_04" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 69;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-PL-SV-L-YEST-1-04 -r 3 -f -t 15"></param>
+					</action>
+					
+					<action id="aSTG_FEED_PL_SV_L_YEST-1_05" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 70;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-PL-SV-L-YEST-1-05 -r 3 -f -t 15"></param>
+					</action>
+		
+					<action id="aSTG_FEED_PL_SV_L_YEST-1_06" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 71;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-PL-SV-L-YEST-1-06 -r 3 -f -t 15"></param>
+					</action>
+		
+					<action id="aSTG_FEED_PL_SV_L_YEST-1_07" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 72;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-PL-SV-L-YEST-1-07 -r 3 -f -t 15"></param>
+					</action>
+				</state>
+
+				<state id="sSTG_FEED_PL_SV_L_OM" mode="parallel">
+					<action id="aSTG_FEED_PL_SV_L_OM_01" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 73;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-PL-SV-LOM-01 -r 3 -f -t 15"></param>
+					</action>
+		
+					<action id="aSTG_FEED_PL_SV_L_OM_02" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 74;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-PL-SV-LOM-02 -r 3 -f -t 15"></param>
+					</action>
+		
+					<action id="aSTG_FEED_PL_SV_L_OM_03" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 75;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-PL-SV-LOM-03 -r 3 -f -t 15"></param>
+					</action>
+		
+					<action id="aSTG_FEED_PL_SV_L_OM_04" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 76;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-PL-SV-LOM-04 -r 3 -f -t 15"></param>
+					</action>
+					
+					<action id="aSTG_FEED_PL_SV_L_OM_05" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 77;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-PL-SV-LOM-05 -r 3 -f -t 15"></param>
+					</action>
+		
+					<action id="aSTG_FEED_PL_SV_L_OM_06" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 78;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-PL-SV-LOM-06 -r 3 -f -t 15"></param>
+					</action>
+				</state>
+			</state>
+
+			<state id="sSTG_FEED_PL_SV_INDEX_ALL" mode="parallel">
+				<action id="aSTG_FEED_PL_SV_INDEX" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_CREATE_INDEX 'Y', 'STG_PL_SV_REP''"></param>
+				</action>
+			</state>
+		</state>
+
+		<state id="sSTG_FEED_MV_ALL" mode="sequence">
+			<state id="sSTG_FEED_MV_MAIN" mode="parallel">
+				<state id="sSTG_FEED_MV_2OM" mode="parallel">
+					<action id="aSTG_FEED_MV_2OM_01" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 80;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-MV-2OM-01 -r 3 -f -t 15"></param>
+					</action>
+		
+					<action id="aSTG_FEED_MV_2OM_02" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 81;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-MV-2OM-02 -r 3 -f -t 15"></param>
+					</action>
+		
+					<action id="aSTG_FEED_MV_2OM_03" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 82;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-MV-2OM-03 -r 3 -f -t 15"></param>
+					</action>
+		
+					<action id="aSTG_FEED_MV_2OM_04" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 83;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-MV-2OM-04 -r 3 -f -t 15"></param>
+					</action>
+				</state>
+
+				<state id="sSTG_FEED_MV_OM-1" mode="parallel">
+					<action id="aSTG_FEED_MV_OM-1_01" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 84;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-MV-OM-1-01 -r 3 -f -t 15"></param>
+					</action>
+		
+					<action id="aSTG_FEED_MV_OM-1_02" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 85;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-MV-OM-1-02 -r 3 -f -t 15"></param>
+					</action>
+		
+					<action id="aSTG_FEED_MV_OM-1_03" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 86;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-MV-OM-1-03 -r 3 -f -t 15"></param>
+					</action>
+		
+					<action id="aSTG_FEED_MV_OM-1_04" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 87;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-MV-OM-1-04 -r 3 -f -t 15"></param>
+					</action>
+				</state>
+			</state>
+
+			<state id="sSTG_FEED_MV_INDEX_ALL" mode="parallel">
+				<action id="aSTG_FEED_MV_INDEX" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_CREATE_INDEX 'Y', 'STG_MV_REP''"></param>
+				</action>
+			</state>
+		</state>
+
+		<state id="sSTG_FEED_SV_ALL" mode="sequence">
+			<state id="sSTG_FEED_SV_MAIN" mode="parallel">
+				<state id="sSTG_FEED_SV_YEST" mode="parallel">
+					<action id="aSTG_FEED_SV_YEST_01" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 90;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-SV-YEST-01 -r 3 -f -t 15"></param>
+					</action>
+		
+					<action id="aSTG_FEED_SV_YEST_02" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 91;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-SV-YEST-02 -r 3 -f -t 15"></param>
+					</action>
+		
+					<action id="aSTG_FEED_SV_YEST_03" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 92;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-SV-YEST-03 -r 3 -f -t 15"></param>
+					</action>
+		
+					<action id="aSTG_FEED_SV_YEST_04" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 93;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-SV-YEST-04 -r 3 -f -t 15"></param>
+					</action>
+		
+					<action id="aSTG_FEED_SV_YEST_05" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 94;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-SV-YEST-05 -r 3 -f -t 15"></param>
+					</action>
+		
+					<action id="aSTG_FEED_SV_YEST_06" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 95;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-SV-YEST-06 -r 3 -f -t 15"></param>
+					</action>
+		
+					<action id="aSTG_FEED_SV_YEST_07" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 96;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-SV-YEST-07 -r 3 -f -t 15"></param>
+					</action>
+		
+					<action id="aSTG_FEED_SV_YEST_08" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 97;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-SV-YEST-08 -r 3 -f -t 15"></param>
+					</action>
+		
+					<action id="aSTG_FEED_SV_YEST_09" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 98;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-SV-YEST-09 -r 3 -f -t 15"></param>
+					</action>
+
+					<action id="aSTG_FEED_SV_YEST_10" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 99;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-SV-YEST-10 -r 3 -f -t 15"></param>
+					</action>
+				</state>
+
+				<state id="sSTG_FEED_SV_L_YEST-1" mode="parallel">
+					<action id="aSTG_FEED_SV_L_YEST-1_01" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 100;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-SV-L-YEST-1-01 -r 3 -f -t 15"></param>
+					</action>
+		
+					<action id="aSTG_FEED_SV_L_YEST-1_02" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 101;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-SV-L-YEST-1-02 -r 3 -f -t 15"></param>
+					</action>
+		
+					<action id="aSTG_FEED_SV_L_YEST-1_03" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 102;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-SV-L-YEST-1-03 -r 3 -f -t 15"></param>
+					</action>
+		
+					<action id="aSTG_FEED_SV_L_YEST-1_04" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 103;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-SV-L-YEST-1-04 -r 3 -f -t 15"></param>
+					</action>
+		
+					<action id="aSTG_FEED_SV_L_YEST-1_05" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 104;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-SV-L-YEST-1-05 -r 3 -f -t 15"></param>
+					</action>
+		
+					<action id="aSTG_FEED_SV_L_YEST-1_06" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 105;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-SV-L-YEST-1-06 -r 3 -f -t 15"></param>
+					</action>
+		
+					<action id="aSTG_FEED_SV_L_YEST-1_07" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 106;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-SV-L-YEST-1-07 -r 3 -f -t 15"></param>
+					</action>
+		
+					<action id="aSTG_FEED_SV_L_YEST-1_08" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 107;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-SV-L-YEST-1-08 -r 3 -f -t 15"></param>
+					</action>
+		
+					<action id="aSTG_FEED_SV_L_YEST-1_09" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 108;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-SV-L-YEST-1-09 -r 3 -f -t 15"></param>
+					</action>
+		
+					<action id="aSTG_FEED_SV_L_YEST-1_10" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 109;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-SV-L-YEST-1-10 -r 3 -f -t 15"></param>
+					</action>
+				</state>
+			</state>
+
+			<state id="sSTG_FEED_SV_INDEX_ALL" mode="parallel">
+				<action id="aSTG_FEED_SV_INDEX" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_CREATE_INDEX 'Y', 'STG_SV_REP''"></param>
+				</action>
+			</state>
+		</state>
+
+		<state id="sSTG_FEED_SV_CS1_ALL" mode="sequence">
+			<state id="sSTG_FEED_SV_CS1_MAIN" mode="parallel">
+				<action id="aSTG_FEED_SV_CS1_YEST_1" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="sleep 110;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-SV-CS1-YEST-01 -r 3 -f -t 15"></param>
+				</action>
+			</state>
+
+			<state id="sSTG_FEED_SV_CS1_INDEX_ALL" mode="parallel">
+				<action id="aSTG_FEED_SV_CS1_INDEX" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_CREATE_INDEX 'Y', 'STG_SV_CS01_REP''"></param>
+				</action>
+			</state>
+		</state>
+
+		<state id="sSTG_FEED_XG_ALL" mode="sequence">
+			<state id="sSTG_FEED_XG_MAIN" mode="parallel">
+				<action id="aSTG_FEED_XG_L_01" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="sleep 120;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-XG-L-YEST-01 -r 3 -f -t 15"></param>
+				</action>
+	
+				<action id="aSTG_FEED_XG_L_02" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="sleep 121;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-XG-L-YEST-02 -r 3 -f -t 15"></param>
+				</action>
+	
+				<action id="aSTG_FEED_XG_L_03" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="sleep 122;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-XG-L-YEST-03 -r 3 -f -t 15"></param>
+				</action>				
+			</state>
+
+			<state id="sSTG_FEED_XG_INDEX_ALL" mode="parallel">
+				<action id="aSTG_FEED_XG_INDEX" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_CREATE_INDEX 'Y', 'STG_XG_REP''"></param>
+				</action>
+			</state>
+
+			<state id="sSTG_FEED_MIFID" mode="parallel">
+				<action id="aSTG_FEED_MIFID_01" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="sleep 122;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFO-MIFIDII"></param>
+				</action>	
+			</state>
+
+			<state id="sSTG_FEED_UPD_MIFID" mode="parallel">
+				<action id="aSTG_FEED_UPD_MIFID_01" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_UPD_MIFIDII'"></param>
+				</action>	
+			</state>
+
+		</state>
+		
+		<state id="sSTG_FEED_VAR" mode="sequence">			
+			<state id="sSTG_FEED_VAR_STRESS_TEST" mode="parallel">
+				<state id="sSTG_FEED_VAR_PART1" mode="sequence">
+					<action id="aSTG_FEED_VAR_MX_EQDVOL" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 3600;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BRV-EQDVOL -r 3"></param>
+					</action>
+
+					<action id="aSTG_FEED_VAR_MX_CGA" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BRV-COMCGA -r 3"></param>
+					</action>
+
+					<action id="aSTG_FEED_VAR_MX_CGA2" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BRV-COMCGA2 -r 3"></param>
+					</action>
+				
+					<action id="aSTG_FEED_VAR_MX_COM60P" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BRV-COM60P -r 3"></param>
+					</action>
+				
+					<action id="aSTG_FEED_VAR_MX_EQD10P" package="MX::Action::ExecuteCmd">
+					   <param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BRV-EQD10P -r 3"></param>
+					</action>
+
+					<action id="aSTG_FEED_VAR_MX_EQD1P" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BRV-EQD1P -r 3"></param>
+					</action>
+				
+					<action id="aSTG_FEED_VAR_MX_20P" package="MX::Action::ExecuteCmd">
+					   <param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BRV-COM20P -r 3"></param>
+					</action>
+
+					<action id="aSTG_FEED_VAR_MX_COM40P1" package="MX::Action::ExecuteCmd">
+					   <param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BRV-COM40P1 -r 3"></param>
+					</action>
+				
+					<action id="aSTG_FEED_VAR_MX_EQD2.5P" package="MX::Action::ExecuteCmd">
+					   <param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BRV-EQD2.5P -r 3"></param>
+					</action>
+				</state>
+		
+				<state id="sSTG_FEED_VAR_PART2" mode="sequence">					
+					<action id="aSTG_FEED_VAR_MX_10P" package="MX::Action::ExecuteCmd">
+					   <param name="cmd" value="sleep 3900;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BRV-COM10P -r 3"></param>
+					</action>
+		   
+					<action id="aSTG_FEED_VAR_MX_OIL" package="MX::Action::ExecuteCmd">
+					   <param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BRV-COMOIL -r 3"></param>
+					</action>
+		   
+					<action id="aSTG_FEED_VAR_MX_EQD5P" package="MX::Action::ExecuteCmd">
+					   <param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BRV-EQD5P -r 3"></param>
+					</action>
+		   
+					<action id="aSTG_FEED_VAR_MX_NATGAZ1" package="MX::Action::ExecuteCmd">
+					   <param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BRV-NATGAZ1 -r 3"></param>
+					</action>
+		   
+					<action id="aSTG_FEED_VAR_MX_CRUDE30" package="MX::Action::ExecuteCmd">
+					   <param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BRV-CRUDE30 -r 3"></param>
+					</action>
+			
+					<action id="aSTG_FEED_VAR_MX_BAR138" package="MX::Action::ExecuteCmd">
+					   <param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BRV-BAR138 -r 3"></param>
+					</action>
+
+					<action id="aSTG_FEED_VAR_MX_BAR289" package="MX::Action::ExecuteCmd">
+					   <param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BRV-BAR289 -r 3"></param>
+					</action>
+				</state>
+
+				<state id="sSTG_FEED_VAR_PART3" mode="sequence">
+					<action id="aSTG_FEED_VAR_MX_UPDW15" package="MX::Action::ExecuteCmd">
+					  <param name="cmd" value="sleep 4200;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BRV-UPDW15 -r 3"></param>
+					</action>
+		   
+					<action id="aSTG_FEED_VAR_MX_COM40P" package="MX::Action::ExecuteCmd">
+					   <param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BRV-COM40P -r 3"></param>
+					</action>			   
+				</state>
+
+				<state id="sSTG_FEED_VAR_PART4" mode="sequence">			   			   
+					<action id="aSTG_FEED_VAR_MX_10TP" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 4500;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BRV-COM10PT -r 3"></param>
+					</action>
+				
+					<action id="aSTG_FEED_VAR_MX_10V0" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BRV-COM10VO -r 3"></param>
+					</action> 					
+				</state>
+
+				<state id="sSTG_FEED_VAR_PART5" mode="sequence">			   			   
+					<action id="aSTG_FEED_VAR_MX_COMAECO.7" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 4800;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BRV-COMAECO.7 -r 3"></param>
+					</action>
+				
+					<action id="aSTG_FEED_VAR_MX_GAS" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BRV-COMGAS -r 3"></param>
+					</action>
+				</state>
+
+				<state id="sSTG_FEED_VAR_PART6" mode="sequence">			   			   
+					<action id="aSTG_FEED_VAR_MX_COMWCS15" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 5100;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BRV-COMWCS15 -r 3"></param>
+					</action>
+				</state>
+
+				<state id="sSTG_FEED_VAR_PART7" mode="sequence">			   			   
+					<action id="aSTG_FEED_VAR_MX_COM30P" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 5400;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BRV-COM30P -r 3"></param>
+					</action>
+				</state>
+
+				<state id="sSTG_FEED_VAR_PART8" mode="sequence">			   			   
+					<action id="aSTG_FEED_VAR_MX_20V1" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 5700;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BRV-COM20V1 -r 3"></param>
+					</action> 					
+				</state>
+			</state>
+	
+			<state id="sSTG_FEED_VAR_DATAMART" mode="parallel">   
+				<action id="aSTG_FEED_VAR_COM" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-VAR-COM"></param>
+				</action>
+
+				<action id="aSTG_FEED_VAR_CURR" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-VAR-CURR"></param>
+				</action>
+
+				<action id="aSTG_FEED_VAR_EQD" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-VAR-EQD"></param>
+				</action>
+				
+				<action id="aSTG_FEED_VAR_SCN" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-VAR-SCN"></param>
+				</action>
+			</state>
+		
+			<state id="sSTG_FEED_VAR_INDEX" mode="parallel">
+				<action id="aSTG_FEED_VAR_COM_INDEX" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_CREATE_INDEX 'Y', 'STG_VAR_COM_REP''"></param>
+				</action>
+	 
+				<action id="aSTG_FEED_VAR_CURR_INDEX" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_CREATE_INDEX 'Y', 'STG_VAR_CURR_REP''"></param>
+				</action>
+
+				<action id="aSTG_FEED_VAR_EQD_INDEX" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_CREATE_INDEX 'Y', 'STG_VAR_EQD_REP''"></param>
+				</action>
+	 
+				<action id="aSTG_FEED_VAR_SCN_INDEX" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_CREATE_INDEX 'Y', 'STG_VAR_SCN_REP''"></param>
+				</action>
+			</state>
+		</state>
+	
+		<state id="sSTG_FEED_TAYLOR" mode="parallel">
+			<action id="aSTG_FEED_TAYLOR-COM1" package="MX::Action::ExecuteCmd">
+				<param name="cmd" value="sleep 7201;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-TAYLOR-COM1 -r 3 -f -t 15"></param>
+			</action>
+					
+			<action id="aSTG_FEED_TAYLOR-COM2" package="MX::Action::ExecuteCmd">
+				<param name="cmd" value="sleep 7202;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-TAYLOR-COM2 -r 3 -f -t 15"></param>
+			</action>
+					
+			<action id="aSTG_FEED_TAYLOR-COM3" package="MX::Action::ExecuteCmd">
+				<param name="cmd" value="sleep 7203;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-TAYLOR-COM3 -r 3 -f -t 15"></param>
+			</action>
+					
+			<action id="aSTG_FEED_TAYLOR-COMU" package="MX::Action::ExecuteCmd">
+				<param name="cmd" value="sleep 7204;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-TAYLOR-COMU -r 3 -f -t 15"></param>
+			</action>
+
+			<action id="aSTG_FEED_TAYLOR-CRD" package="MX::Action::ExecuteCmd">
+				<param name="cmd" value="sleep 7205;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-TAYLOR-CRD -r 3 -f -t 15"></param>
+			</action>
+
+			<action id="aSTG_FEED_TAYLOR-CRDU" package="MX::Action::ExecuteCmd">
+				<param name="cmd" value="sleep 7206;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-TAYLOR-CRDU -r 3 -f -t 15"></param>
+			</action>
+
+			<action id="aSTG_FEED_TAYLOR-CURR" package="MX::Action::ExecuteCmd">
+				<param name="cmd" value="sleep 7208;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-TAYLOR-CURR -r 3 -f -t 15"></param>
+			</action>
+
+			<action id="aSTG_FEED_TAYLOR-CURU" package="MX::Action::ExecuteCmd">
+				<param name="cmd" value="sleep 7209;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-TAYLOR-CURU -r 3 -f -t 15"></param>
+			</action>
+					
+			<action id="aSTG_FEED_TAYLOR-IRD1" package="MX::Action::ExecuteCmd">
+				<param name="cmd" value="sleep 7212;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-TAYLOR-IRD1 -r 3 -f -t 15"></param>
+			</action>
+
+			<action id="aSTG_FEED_TAYLOR-IRD2" package="MX::Action::ExecuteCmd">
+				<param name="cmd" value="sleep 7213;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-TAYLOR-IRD2 -r 3 -f -t 15"></param>
+			</action>
+
+			<action id="aSTG_FEED_TAYLOR-IRD3" package="MX::Action::ExecuteCmd">
+				<param name="cmd" value="sleep 7214;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-TAYLOR-IRD3 -r 3 -f -t 15"></param>
+			</action>
+
+			<action id="aSTG_FEED_TAYLOR-IRD4" package="MX::Action::ExecuteCmd">
+				<param name="cmd" value="sleep 7215;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-TAYLOR-IRD4 -r 3 -f -t 15"></param>
+			</action>
+					
+			<action id="aSTG_FEED_TAYLOR-IRD5" package="MX::Action::ExecuteCmd">
+				<param name="cmd" value="sleep 7216;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-TAYLOR-IRD5 -r 3 -f -t 15"></param>
+			</action>
+					
+			<action id="aSTG_FEED_TAYLOR-IRD6" package="MX::Action::ExecuteCmd">
+				<param name="cmd" value="sleep 7217;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-TAYLOR-IRD6 -r 3 -f -t 15"></param>
+			</action>
+					
+			<action id="aSTG_FEED_TAYLOR-IRD7" package="MX::Action::ExecuteCmd">
+				<param name="cmd" value="sleep 7218;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-TAYLOR-IRD7 -r 3 -f -t 15"></param>
+			</action>
+					
+			<action id="aSTG_FEED_TAYLOR-IRD8" package="MX::Action::ExecuteCmd">
+				<param name="cmd" value="sleep 7219;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-TAYLOR-IRD8 -r 3 -f -t 15"></param>
+			</action>
+
+			<action id="aSTG_FEED_TAYLOR-IRD9" package="MX::Action::ExecuteCmd">
+				<param name="cmd" value="sleep 7220;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-TAYLOR-IRD9 -r 3 -f -t 15"></param>
+			</action>
+
+			<action id="aSTG_FEED_TAYLOR-IRDU" package="MX::Action::ExecuteCmd">
+				<param name="cmd" value="sleep 7221;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-TAYLOR-IRDU -r 3 -f -t 15"></param>
+			</action>
+		</state>
+	</state>
+	
+	<state id="sLAUNCH_MASTER_LAUNCHER" mode="parallel">
+		<action id="aLAUNCH_MASTER_LAUNCHER" package="MX::Action::ExecuteCmd">
+			<param name="cmd" value="touch $MXKEY/bo_done.key;chmod 777 $MXKEY/bo_done.key"></param>
+		</action>
+
+		<action id="aEOD_VAR211_KEY_MAXI" package="MX::Action::ExecuteCmd">
+			<param name="cmd" value="$MXBIN/VAR/SCRIPT/check_date_var.pl -c 'touch $MXKEY/var_handler_maxi_active.key'"></param>
+		</action>
+	</state>
+	
+ 	<state id="sSTG_FEED_PARSER_FUNCTION" mode="parallel">
+ 		<state id="sSTG_FEED_CVPRC" mode="sequence">
+ 			<action id="aMX_FEED_CVPRC" package="MX::Action::ExecuteCmd">
+ 				<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFM-CVPRC"></param>
+ 			</action>
+ 
+ 			<action id="aSTG_FEED_CVPRC" package="MX::Action::ExecuteCmd">
+ 				<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-CVPRC-OM"></param>
+ 			</action>
+ 
+ 			<action id="aSTG_FEED_CVPRC_INDEX" package="MX::Action::ExecuteCmd">
+ 				<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_CREATE_INDEX 'Y', 'STG_CVPRC_REP''"></param>
+ 			</action>
+ 		</state>
+ 
+ 		<state id="sSTG_FEED_CVSPT" mode="sequence">
+ 			<action id="aMX_FEED_CVSPT" package="MX::Action::ExecuteCmd">
+ 				<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFM-CVSPT"></param>
+ 			</action>
+ 
+ 			<action id="aSTG_FEED_CVSPT" package="MX::Action::ExecuteCmd">
+ 				<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-CVSPT-OM"></param>
+ 			</action>
+ 
+ 			<action id="aSTG_FEED_CVSPT_INDEX" package="MX::Action::ExecuteCmd">
+ 				<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_CREATE_INDEX 'Y', 'STG_CVSPT_REP''"></param>
+ 			</action>
+ 		</state>
+ 
+ 		<state id="sSTG_FEED_DTSEC" mode="sequence">
+ 			<action id="aMX_FEED_DTSEC" package="MX::Action::ExecuteCmd">
+ 				<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFM-DTSEC"></param>
+ 			</action>
+ 
+ 			<action id="aSTG_FEED_DTSEC" package="MX::Action::ExecuteCmd">
+ 				<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-DTSEC-YEST -r 3 -f -t 15"></param>
+ 			</action>
+ 
+ 			<action id="aSTG_FEED_DTSEC_INDEX" package="MX::Action::ExecuteCmd">
+ 				<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_CREATE_INDEX 'Y', 'STG_DTSCE_REP''"></param>
+ 			</action>
+ 		</state>
+
+		<state id="sSTG_FEED_RTNBD" mode="sequence">
+			<action id="aMX_FEED_RTNBD" package="MX::Action::ExecuteCmd">
+				<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFM-RTNBD"></param>
+			</action>
+
+			<action id="aSTG_FEED_RTNBD" package="MX::Action::ExecuteCmd">
+				<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps_retry.pl -s DM-BFS-RTNBD-YEST -r 3 -f -t 15"></param>
+			</action>
+
+			<action id="aSTG_FEED_RTNBD_INDEX" package="MX::Action::ExecuteCmd">
+				<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_CREATE_INDEX 'Y', 'STG_RTNBD_REP''"></param>
+			</action>
+		</state>
+	</state>
+
+ 	<state id="sSTG_VALIDATE_INTEGRITY" mode="parallel">
+ 		<action id="aSTG_VALIDATE_CHKZERO_CS" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_CHK_ZERO_CS'"></param>
+ 		</action>
+ 
+ 		<action id="aSTG_VALIDATE_CHKZERO_CS_FUT" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_CHK_ZERO_CS_FUT'"></param>
+ 		</action>
+ 
+ 		<action id="aSTG_VALIDATE_CHKZERO_CVPRC" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_CHK_ZERO_CVPRC'"></param>
+ 		</action>
+ 
+ 		<action id="aSTG_VALIDATE_CHKZERO_CVSPT" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_CHK_ZERO_CVSPT'"></param>
+ 		</action>
+ 
+ 		<action id="aSTG_VALIDATE_CHKZERO_DT" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_CHK_ZERO_DT'"></param>
+ 		</action>
+ 
+ 		<action id="aSTG_VALIDATE_CHKZERO_DTSEC" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_CHK_ZERO_DTSEC'"></param>
+ 		</action>
+ 
+ 		<action id="aSTG_VALIDATE_CHKZERO_DT_SV" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_CHK_ZERO_DT_SV'"></param>
+ 		</action>
+ 		
+ 		<action id="aSTG_VALIDATE_CHKZERO_IRDRISK" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_CHK_ZERO_IRDRISK'"></param>
+ 		</action>
+ 		
+ 		<action id="aSTG_VALIDATE_CHKZERO_MKT_PRC_BND" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_CHK_ZERO_MKT_PRIC_BND'"></param>
+ 		</action>
+ 		
+ 		<action id="aSTG_VALIDATE_CHKZERO_MV" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_CHK_ZERO_MV'"></param>
+ 		</action>
+ 
+ 		<action id="aSTG_VALIDATE_CHKZERO_PL" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_CHK_ZERO_PL'"></param>
+ 		</action>
+ 
+ 		<action id="aSTG_VALIDATE_CHKZERO_PL_SV" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_CHK_ZERO_PL_SV'"></param>
+ 		</action>
+ 
+ 		<action id="aSTG_VALIDATE_CHKZERO_SV" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_CHK_ZERO_SV'"></param>
+ 		</action>
+ 
+ 		<action id="aSTG_VALIDATE_CHKZERO_VAR_COM" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_CHK_ZERO_VAR_COM'"></param>
+ 		</action>
+ 
+		<action id="aSTG_VALIDATE_CHKZERO_VAR_CURR" package="MX::Action::ExecuteCmd">
+			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_CHK_ZERO_VAR_CURR'"></param>
+		</action>
+ 
+ 		<action id="aSTG_VALIDATE_CHKZERO_VAR_EQD" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_CHK_ZERO_VAR_EQD'"></param>
+ 		</action>
+ 
+ 		<action id="aSTG_VALIDATE_CHKZERO_VAR_SCN" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_CHK_ZERO_VAR_SCN'"></param>
+ 		</action>
+ 		
+ 		<action id="aSTG_VALIDATE_CHKZERO_XG" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_CHK_ZERO_XG'"></param>
+ 		</action>
+ 	</state>
+ 
+ 	<state id="sODS_TRUNCATE" mode="parallel">
+ 		<action id="aODS_TRUNCATE_ODS_COMRISK_SPEC" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'sp_ODS_TRUNCATE_COMRISK_SPEC 'Y''"></param>
+ 		</action>
+ 		
+ 		<action id="aODS_TRUNCATE_ODS_CRDRISK_SPEC" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'sp_ODS_TRUNCATE_CRDRISK_SPEC 'Y''"></param>
+ 		</action>	
+ 		
+ 		<action id="aODS_TRUNCATE_ODS_CS_EVAL" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'sp_ODS_TRUNCATE_CS_EVAL 'Y''"></param>
+ 		</action>	
+ 
+ 		<action id="aODS_TRUNCATE_ODS_CS_FUT" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'sp_ODS_TRUNCATE_CS_FUT 'Y''"></param>
+ 		</action>
+ 		
+ 		<action id="aODS_TRUNCATE_ODS_DT_SV" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'sp_ODS_TRUNCATE_DT_SV 'Y''"></param>
+ 		</action>
+ 		
+ 		<action id="aODS_TRUNCATE_ODS_FXRISK_SPEC" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'sp_ODS_TRUNCATE_FXRISK_SPEC 'Y''"></param>
+ 		</action>
+ 		
+ 		<action id="aODS_TRUNCATE_ODS_IRDRISK" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'sp_ODS_TRUNCATE_IRDRISK 'Y''"></param>
+ 		</action>	
+ 		
+ 		<action id="aODS_TRUNCATE_ODS_IRDRISK_SPEC" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'sp_ODS_TRUNCATE_IRDRISK_SPEC 'Y''"></param>
+ 		</action>
+ 		
+ 		<action id="aODS_TRUNCATE_ODS_PL_SV" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'sp_ODS_TRUNCATE_PL_SV 'Y''"></param>
+ 		</action>
+ 
+ 		<action id="aODS_TRUNCATE_ODS_SV" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'sp_ODS_TRUNCATE_SV 'Y''"></param>
+ 		</action>
+ 		
+ 		<action id="aODS_TRUNCATE_ODS_VAR_COM" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'sp_ODS_TRUNCATE_VAR_COM 'Y''"></param>
+ 		</action>
+ 		
+ 		<action id="aODS_TRUNCATE_ODS_VAR_SCN" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'sp_ODS_TRUNCATE_VAR_SCN 'Y''"></param>
+ 		</action>
+		
+		<action id="aODS_TRUNCATE_ODS_VAR211_COM" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'sp_ODS_TRUNCATE_VAR211_COM 'Y''"></param>
+ 		</action>
+		
+		<action id="aODS_TRUNCATE_ODS_VAR211_CRD" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'sp_ODS_TRUNCATE_VAR211_CRD 'Y''"></param>
+ 		</action>
+		
+		<action id="aODS_TRUNCATE_ODS_VAR211_CURR" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'sp_ODS_TRUNCATE_VAR211_CURR 'Y''"></param>
+ 		</action>
+		
+		<action id="aODS_TRUNCATE_ODS_VAR211_IRD" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'sp_ODS_TRUNCATE_VAR211_IRD 'Y''"></param>
+ 		</action>
+ 	</state>
+ 
+	<state id="sODS_DROP_INDEX" mode="parallel">
+ 		<action id="aODS_DROP_INDEX_COMRISK_SPEC" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_DROP_INDEX 'Y', 'ODS_COMRISK_SPEC_REP''"></param>
+ 		</action>	
+ 		
+ 		<action id="aODS_DROP_INDEX_CRDRISK_SPEC" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_DROP_INDEX 'Y', 'ODS_CRDRISK_SPEC_REP''"></param>
+ 		</action>	
+ 		
+ 		<action id="aODS_DROP_INDEX_CS" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_DROP_INDEX 'Y', 'ODS_CS_REP''"></param>
+ 		</action>
+ 
+ 		<action id="aODS_DROP_INDEX_CS_FUT" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_DROP_INDEX 'Y', 'ODS_CS_FUT_REP''"></param>
+ 		</action>
+ 
+ 		<action id="aODS_DROP_INDEX_DT" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_DROP_INDEX 'Y', 'ODS_DT_REP''"></param>
+ 		</action>
+ 
+ 		<action id="aODS_DROP_INDEX_DT_SV" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_DROP_INDEX 'Y', 'ODS_DT_SV_REP''"></param>
+ 		</action>
+ 		
+ 		<action id="aODS_DROP_INDEX_FXRISK_SPEC" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_DROP_INDEX 'Y', 'ODS_FXRISK_SPEC_REP''"></param>
+ 		</action>	
+ 		
+ 		<action id="aODS_DROP_INDEX_IRDRISK" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_DROP_INDEX 'Y', 'ODS_IRDRISK_REP''"></param>
+ 		</action>	
+ 		
+ 		<action id="aODS_DROP_INDEX_IRDRISK_SPEC" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_DROP_INDEX 'Y', 'ODS_IRDRISK_SPEC_REP''"></param>
+ 		</action>	
+ 		
+ 		<action id="aODS_DROP_INDEX_MV" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_DROP_INDEX 'Y', 'ODS_MV_REP''"></param>
+ 		</action>
+ 
+ 		<action id="aODS_DROP_INDEX_MV_DETAIL" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_DROP_INDEX 'Y', 'ODS_MV_DETAIL_REP''"></param>
+ 		</action>
+ 		
+ 		<action id="aODS_DROP_INDEX_PL" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_DROP_INDEX 'Y', 'ODS_PL_REP''"></param>
+ 		</action>
+ 
+ 		<action id="aODS_DROP_INDEX_PL_HS" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_DROP_INDEX 'Y', 'ODS_PL_HS_REP''"></param>
+ 		</action>
+ 
+ 		<action id="aODS_DROP_INDEX_PL_SV" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_DROP_INDEX 'Y', 'ODS_PL_SV_REP''"></param>
+ 		</action>
+ 
+ 		<action id="aODS_DROP_INDEX_VAR_COM" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_DROP_INDEX 'Y', 'ODS_VAR_COM_REP''"></param>
+ 		</action>
+ 	
+ 		<action id="aODS_DROP_INDEX_VAR_SCN" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_DROP_INDEX 'Y', 'ODS_VAR_SCN_REP''"></param>
+ 		</action>
+ 		
+ 		<action id="aODS_DROP_INDEX_XG" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_DROP_INDEX 'Y', 'ODS_XG_REP''"></param>
+ 		</action>
+ 	</state>
+
+ 	<state id="sODS_FEED_ALL" mode="parallel">
+ 	
+ 		<state id="sODS_FEED_COMRISK_SPEC" mode="sequence">
+ 			<action id="aODS_FEED_COMRISK_SPEC" package="MX::Action::ExecuteCmd">
+ 				<param name="cmd" value="sleep 1;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFO-COMRISK-SPEC-L"></param>
+ 			</action>
+ 
+ 			<action id="aODS_FEED_COMRISK_SPEC_INDEX" package="MX::Action::ExecuteCmd">
+ 				<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CREATE_INDEX 'Y', 'ODS_IRDRISK_SPEC_REP''"></param>
+ 			</action>
+ 		</state>
+ 		
+ 		<state id="sODS_FEED_CRDRISK_SPEC" mode="sequence">
+ 			<action id="aODS_FEED_CRDRISK_SPEC" package="MX::Action::ExecuteCmd">
+ 				<param name="cmd" value="sleep 5;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFO-CRDRISK-SPEC-L"></param>
+ 			</action>
+ 
+ 			<action id="aODS_FEED_CRDRISK_SPEC_INDEX" package="MX::Action::ExecuteCmd">
+ 				<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CREATE_INDEX 'Y', 'ODS_CRDRISK_SPEC_REP''"></param>
+ 			</action>
+ 		</state>	
+ 		
+ 		<state id="sODS_FEED_CS" mode="sequence">
+ 			<action id="aODS_FEED_CS" package="MX::Action::ExecuteCmd">
+ 				<param name="cmd" value="sleep 10;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFO-CS-L"></param>
+ 			</action>
+ 
+ 			<action id="aODS_FEED_CS_INDEX" package="MX::Action::ExecuteCmd">
+ 				<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CREATE_INDEX 'Y', 'ODS_CS_REP''"></param>
+ 			</action>
+ 		</state>
+ 
+ 		<state id="sODS_FEED_CS_FUT_L" mode="sequence">
+ 			<action id="aODS_FEED_CS_FUT_L" package="MX::Action::ExecuteCmd">
+ 				<param name="cmd" value="sleep 15;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFO-CS-FUT-L"></param>
+ 			</action>
+ 
+ 			<action id="aODS_FEED_CS_FUT_INDEX" package="MX::Action::ExecuteCmd">
+ 				<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CREATE_INDEX 'Y', 'ODS_CS_FUT_REP''"></param>
+ 			</action>
+ 		</state>
+ 
+ 		<state id="sODS_FEED_CS_EVAL" mode="sequence">
+ 			<action id="aODS_FEED_CS_EVAL" package="MX::Action::ExecuteCmd">
+ 				<param name="cmd" value="sleep 20;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFO-CS-EVAL"></param>
+ 			</action>
+ 		</state>
+ 		
+ 		<state id="sODS_FEED_DT" mode="sequence">
+ 			<action id="aODS_FEED_DT" package="MX::Action::ExecuteCmd">
+ 				<param name="cmd" value="sleep 25;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFO-DT-L"></param>
+ 			</action>
+ 
+ 			<action id="aODS_FEED_DT_INDEX" package="MX::Action::ExecuteCmd">
+ 				<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CREATE_INDEX 'Y', 'ODS_DT_REP''"></param>
+ 			</action>
+ 		</state>
+ 
+ 		<state id="sODS_FEED_DT_SV" mode="sequence">
+ 			<action id="aODS_FEED_DT_SV" package="MX::Action::ExecuteCmd">
+ 				<param name="cmd" value="sleep 900;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFO-DT-SV"></param>
+ 			</action>
+ 
+ 			<action id="aODS_FEED_DT_SV_INDEX" package="MX::Action::ExecuteCmd">
+ 				<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CREATE_INDEX 'Y', 'ODS_DT_SV_REP''"></param>
+ 			</action>
+ 		</state>
+ 
+ 		<state id="sODS_FEED_FXRISK_SPEC" mode="sequence">
+ 			<action id="aODS_FEED_FXRISK_SPEC" package="MX::Action::ExecuteCmd">
+ 				<param name="cmd" value="sleep 35;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFO-FXRISK-SPEC-L"></param>
+ 			</action>
+ 
+ 			<action id="aODS_FEED_FXRISK_SPEC_INDEX" package="MX::Action::ExecuteCmd">
+ 				<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CREATE_INDEX 'Y', 'ODS_FXRISK_SPEC_REP''"></param>
+ 			</action>
+ 		</state>	
+ 		
+ 		<state id="sODS_FEED_IRDRISK" mode="sequence">
+ 			<action id="aODS_FEED_IRDRISK" package="MX::Action::ExecuteCmd">
+ 				<param name="cmd" value="sleep 40;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFO-IRDRISK"></param>
+ 			</action>
+ 
+ 			<action id="aODS_FEED_IRDRISK_INDEX" package="MX::Action::ExecuteCmd">
+ 				<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CREATE_INDEX 'Y', 'ODS_IRDRISK_REP''"></param>
+ 			</action>
+ 		</state>
+ 
+ 		<state id="sODS_FEED_IRDRISK_SPEC" mode="sequence">
+ 			<action id="aODS_FEED_IRDRISK_SPEC" package="MX::Action::ExecuteCmd">
+ 				<param name="cmd" value="sleep 45;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFO-IRDRISK-SPEC-L"></param>
+ 			</action>
+ 
+ 			<action id="aODS_FEED_IRDRISK_SPEC_INDEX" package="MX::Action::ExecuteCmd">
+ 				<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CREATE_INDEX 'Y', 'ODS_IRDRISK_SPEC_REP''"></param>
+ 			</action>
+ 		</state>
+ 		
+ 		<state id="sODS_FEED_MV_DETAIL" mode="sequence">
+ 			<action id="aODS_FEED_MV_DETAIL" package="MX::Action::ExecuteCmd">
+ 				<param name="cmd" value="sleep 1200;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFO-MV-DETAIL-L"></param>
+ 			</action>
+ 
+ 			<action id="aODS_FEED_MV_DETAIL_INDEX" package="MX::Action::ExecuteCmd">
+ 				<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CREATE_INDEX 'Y', 'ODS_MV_DETAIL_REP''"></param>
+ 			</action>
+ 		</state>
+ 
+ 		<state id="sODS_FEED_PL" mode="sequence">
+ 			<action id="aODS_FEED_PL" package="MX::Action::ExecuteCmd">
+ 				<param name="cmd" value="sleep 55;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFO-PL-L"></param>
+ 			</action>
+ 
+ 			<action id="aODS_FEED_PL_INDEX" package="MX::Action::ExecuteCmd">
+ 				<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CREATE_INDEX 'Y', 'ODS_PL_REP''"></param>
+ 			</action>
+ 		</state>
+ 
+ 		<state id="sODS_FEED_PL_HS" mode="sequence">
+ 			<action id="aODS_FEED_PL_HS" package="MX::Action::ExecuteCmd">
+ 				<param name="cmd" value="sleep 60;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFO-PL-L-HS"></param>
+ 			</action>
+ 
+ 			<action id="aODS_FEED_PL_HS_INDEX" package="MX::Action::ExecuteCmd">
+ 				<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CREATE_INDEX 'Y', 'ODS_PL_HS_REP''"></param>
+ 			</action>
+ 		</state>
+ 
+ 		<state id="sODS_FEED_PL_SV" mode="sequence">
+ 			<action id="aODS_FEED_PL_SV" package="MX::Action::ExecuteCmd">
+ 				<param name="cmd" value="sleep 65;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFO-PL-SV"></param>
+ 			</action>
+ 
+ 			<action id="aODS_FEED_PL_SV_INDEX" package="MX::Action::ExecuteCmd">
+ 				<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CREATE_INDEX 'Y', 'ODS_PL_SV_REP''"></param>
+ 			</action>
+ 		</state>
+ 
+ 		<state id="sODS_FEED_SV" mode="sequence">
+ 			<action id="aODS_FEED_SV" package="MX::Action::ExecuteCmd">
+ 				<param name="cmd" value="sleep 70;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFO-SV"></param>
+ 			</action>
+ 
+ 			<action id="aODS_FEED_SV_INDEX" package="MX::Action::ExecuteCmd">
+ 				<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CREATE_INDEX 'Y', 'ODS_SV_REP''"></param>
+ 			</action>
+ 		</state>
+ 	
+ 		<state id="sODS_FEED_VAR_COM" mode="sequence">
+ 			<action id="aODS_FEED_VAR_COM" package="MX::Action::ExecuteCmd">
+ 				<param name="cmd" value="sleep 75;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFO-VAR-COM"></param>
+ 			</action>
+ 
+ 			<action id="aODS_FEED_VAR_COM_INDEX" package="MX::Action::ExecuteCmd">
+ 				<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CREATE_INDEX 'Y', 'ODS_VAR_COM_REP''"></param>
+ 			</action>
+ 		</state>
+ 
+ 		<state id="sODS_FEED_VAR_SCN" mode="sequence">
+ 			<action id="aODS_FEED_VAR_SCN" package="MX::Action::ExecuteCmd">
+ 				<param name="cmd" value="sleep 80;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFO-VAR-SCN"></param>
+ 			</action>
+ 
+ 			<action id="aODS_FEED_VAR_SCN_INDEX" package="MX::Action::ExecuteCmd">
+ 				<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CREATE_INDEX 'Y', 'ODS_VAR_SCN_REP''"></param>
+ 			</action>
+ 		</state>	
+ 		
+ 		<state id="sODS_FEED_XG" mode="sequence">
+ 			<action id="aODS_FEED_XG" package="MX::Action::ExecuteCmd">
+ 				<param name="cmd" value="sleep 85;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFO-XG-L"></param>
+ 			</action>
+ 
+ 			<action id="aODS_FEED_XG_INDEX" package="MX::Action::ExecuteCmd">
+ 				<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CREATE_INDEX 'Y', 'ODS_XG_REP''"></param>
+ 			</action>
+ 		</state>
+
+ 		<state id="sODS_FEED_TAYLOR_COM" mode="sequence">
+ 			<action id="aODS_TAYLOR_COM" package="MX::Action::ExecuteCmd">
+ 				<param name="cmd" value="sleep 90;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFO-TAYLOR-COM"></param>
+ 			</action>
+        </state>		
+		
+		<state id="sODS_FEED_TAYLOR_CRD" mode="sequence">
+ 			<action id="aODS_FEED_TAYLOR_CRD" package="MX::Action::ExecuteCmd">
+ 				<param name="cmd" value="sleep 960;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFO-TAYLOR-CRD"></param>
+ 			</action>
+        </state>		
+		
+		<state id="sODS_FEED_TAYLOR_CURR" mode="sequence">
+ 			<action id="aODS_FEED_TAYLOR_CURR" package="MX::Action::ExecuteCmd">
+ 				<param name="cmd" value="sleep 1020;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFO-TAYLOR-CURR"></param>
+ 			</action>
+        </state>		
+		
+		<state id="sODS_FEED_TAYLOR_IRD" mode="sequence">
+ 			<action id="aODS_FEED_TAYLOR_IRD" package="MX::Action::ExecuteCmd">
+ 				<param name="cmd" value="sleep 210;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFO-TAYLOR-IRD"></param>
+ 			</action>
+        </state>				
+ 	</state>
+
+ 	<state id="sODS_SQL" mode="parallel">
+ 
+		<state id="sODS_SQL_UPDATE" mode="parallel">
+ 
+			<state id="sODS_UPD_CS" mode="sequence">
+				<action id="aODS_UPD_CS" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_UPD_CS 'Y','EOD_LIVE''"></param>
+				</action>
+			</state>
+	 
+			<state id="sODS_UPD_CS_FUT" mode="sequence">
+				<action id="aODS_UPD_CS_FUT" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_UPD_CS_FUT 'Y','EOD_LIVE''"></param>
+				</action>
+			</state>
+ 		
+			<state id="sODS_UPD_DT" mode="sequence">
+				<action id="aODS_UPD_DT" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_UPD_DT 'Y','EOD_LIVE''"></param>
+				</action>
+			</state>
+			
+			<state id="sODS_UPD_DT_SV" mode="sequence">
+				<action id="aODS_UPD_DT_SV" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_UPD_DT_SV 'Y','EOD_LIVE''"></param>
+				</action>
+			</state>
+			
+			<state id="sODS_UPD_MV" mode="sequence">
+				<action id="aODS_UPD_MV_DETAIL" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_UPD_MV_DETAIL 'Y','EOD_LIVE''"></param>
+				</action>
+				
+				<action id="aODS_FEED_MV" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_FEED_MV 'Y''"></param>
+				</action>
+	 
+				<action id="aODS_FEED_MV_INDEX" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CREATE_INDEX 'Y', 'ODS_MV_REP''"></param>
+				</action>
+			</state>
+ 
+			<state id="sODS_UPD_PL" mode="sequence">
+				<action id="aODS_UPD_PL" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_UPD_PL 'Y','EOD_LIVE''"></param>
+				</action>
+			</state>
+			
+			<state id="sODS_UPD_PL_SV" mode="sequence">
+				<action id="aODS_UPD_PL_SV" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_UPD_PL_SV 'Y','EOD_LIVE''"></param>
+				</action>
+			</state>
+			
+			<state id="sODS_UPD_SV" mode="sequence">
+				<action id="aODS_UPD_SV" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_UPD_SV 'Y','EOD_LIVE''"></param>
+				</action>
+			</state>
+			
+			<state id="sODS_UPD_XG" mode="sequence">
+				<action id="aODS_UPD_XG" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="sleep 15;$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_UPD_XG 'Y','EOD''"></param>
+				</action>
+			</state>
+		</state>
+ 
+		<state id="sUPDATE_STATISTICS" mode="sequence">
+			<action id="aUPDSTATIS_STG_CONV_REP" package="MX::Action::ExecuteCmd">
+				<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'update index statistics STG_CONV_REP'"></param>
+			</action>
+ 
+			<action id="aUPDSTATIS_STG_DEALCURR_REP" package="MX::Action::ExecuteCmd">
+				<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'update index statistics STG_DEALCURR_REP'"></param>
+			</action>
+ 
+			<action id="aUPDSTATIS_STG_DEALCOM_REP" package="MX::Action::ExecuteCmd">
+				<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'update index statistics STG_DEALCOM_REP'"></param>
+			</action>
+ 
+			<action id="aUPDSTATIS_STG_DEALEQD_REP" package="MX::Action::ExecuteCmd">
+				<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'update index statistics STG_DEALEQD_REP'"></param>
+			</action>
+ 
+			<action id="aUPDSTATIS_STG_DEALHDR_REP" package="MX::Action::ExecuteCmd">
+				<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'update index statistics STG_DEALHDR_REP'"></param>
+			</action>
+ 
+			<action id="aUPDSTATIS_STG_LTI_REP" package="MX::Action::ExecuteCmd">
+				<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'update index statistics STG_LTI_REP'"></param>
+			</action>
+ 
+			<action id="aUPDSTATIS_STG_MKTOP_REP" package="MX::Action::ExecuteCmd">
+				<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'update index statistics STG_MKTOP_REP'"></param>
+			</action>
+
+			<action id="aUPDSTATIS_STG_SEC_UND_REP" package="MX::Action::ExecuteCmd">
+				<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'update index statistics STG_SEC_UND_REP'"></param>
+			</action>
+
+			<action id="aUPDSTATIS_ODS_CPTY_REP" package="MX::Action::ExecuteCmd">
+				<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'update index statistics ODS_CPTY_REP'"></param>
+			</action>
+
+			<action id="aUPDSTATIS_ODS_CS_REP" package="MX::Action::ExecuteCmd">
+				<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'update index statistics ODS_CS_REP'"></param>
+			</action>
+	 
+			<action id="aUPDSTATIS_ODS_DEALHDR_REP" package="MX::Action::ExecuteCmd">
+				<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'update index statistics ODS_DEALHDR_REP'"></param>
+			</action>
+	 
+			<action id="aUPDSTATIS_STG_DEALIRD_REP" package="MX::Action::ExecuteCmd">
+				<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'update index statistics STG_DEALIRD_REP'"></param>
+			</action>
+	 
+			<action id="aUPDSTATIS_ODS_DT_REP" package="MX::Action::ExecuteCmd">
+				<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'update index statistics ODS_DT_REP'"></param>
+			</action>
+	 
+			<action id="aUPDSTATIS_STG_ENTITY_REP" package="MX::Action::ExecuteCmd">
+				<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'update index statistics STG_ENTITY_REP'"></param>
+			</action>
+
+			<action id="aUPDSTATIS_ODS_PL_REP" package="MX::Action::ExecuteCmd">
+				<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'update index statistics ODS_PL_REP'"></param>
+			</action>
+	 
+			<action id="aUPDSTATIS_ODS_PL_HS_REP" package="MX::Action::ExecuteCmd">
+				<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'update index statistics ODS_PL_HS_REP'"></param>
+			</action>
+	 
+			<action id="aUPDSTATIS_ODS_PL_SV_REP" package="MX::Action::ExecuteCmd">
+				<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'update index statistics ODS_PL_SV_REP'"></param>
+			</action>
+			
+			<action id="aUPDSTATIS_ODS_MV_REP" package="MX::Action::ExecuteCmd">
+				<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'update index statistics ODS_MV_REP'"></param>
+			</action>
+			
+			<action id="aUPDSTATIS_ODS_MV_DETAIL_REP" package="MX::Action::ExecuteCmd">
+				<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'update index statistics ODS_MV_DETAIL_REP'"></param>
+			</action>
+			
+			<action id="aUPDSTATIS_ODS_TRADE_LEG_REP" package="MX::Action::ExecuteCmd">
+				<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'update index statistics ODS_TRADE_LEG_REP'"></param>
+			</action>
+			
+			<action id="aUPDSTATIS_ODS_TRADE_REP" package="MX::Action::ExecuteCmd">
+				<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'update index statistics ODS_TRADE_REP'"></param>
+			</action>
+	 
+			<action id="aUPDSTATIS_ODS_TRADE_HS_REP" package="MX::Action::ExecuteCmd">
+				<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'update index statistics ODS_TRADE_HS_REP'"></param>
+			</action>
+			
+			<action id="aUPDSTATIS_ODS_TRADE_LEG_HS_REP" package="MX::Action::ExecuteCmd">
+				<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'update index statistics ODS_TRADE_LEG_HS_REP'"></param>
+			</action>
+		</state>
+	</state>
+ 
+ 	<state id="sODS_VALIDATE_INTEGRITY" mode="parallel">
+ 		<action id="aODS_VALIDATE_CHKZERO_BASKET" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_ZERO_BASKET'"></param>
+ 		</action>
+ 		
+ 		<action id="aODS_VALIDATE_CHKZERO_COMRISK_SPEC" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_ZERO_COMRISK_SPEC'"></param>
+ 		</action>
+ 		
+ 		<action id="aODS_VALIDATE_CHKZERO_CPTY" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_ZERO_CPTY'"></param>
+ 		</action>
+ 		
+ 		<action id="aODS_VALIDATE_CHKZERO_CRDRISK_SPEC" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_ZERO_CRDRISK_SPEC'"></param>
+ 		</action>
+ 		
+ 		<action id="aODS_VALIDATE_CHKZERO_CS" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_ZERO_CS'"></param>
+ 		</action>
+ 
+ 		<action id="aODS_VALIDATE_CHKZERO_CS_FUT" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_ZERO_CS_FUT'"></param>
+ 		</action>
+ 
+ 		<action id="aODS_VALIDATE_CHKZERO_DT" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_ZERO_DT'"></param>
+ 		</action>
+ 
+ 		<action id="aODS_VALIDATE_CHKZERO_DT_SV" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_ZERO_DT_SV'"></param>
+ 		</action>
+ 		
+ 		<action id="aODS_VALIDATE_CHKZERO_EVENT_LB" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_ZERO_EVENT_LB'"></param>
+ 		</action>
+ 
+ 		<action id="aODS_VALIDATE_CHKZERO_FX_FUT" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_ZERO_FX_FUT'"></param>
+ 		</action>
+ 		
+ 		<action id="aODS_VALIDATE_CHKZERO_FXRISK_SPEC" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_ZERO_FXRISK_SPEC'"></param>
+ 		</action>
+ 
+ 		<action id="aODS_VALIDATE_CHKZERO_GEN" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_ZERO_GEN'"></param>
+ 		</action>
+ 		
+ 		<action id="aODS_VALIDATE_CHKZERO_IRDRISK" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_ZERO_IRDRISK'"></param>
+ 		</action>
+ 		
+ 		<action id="aODS_VALIDATE_CHKZERO_IRDRISK_SPEC" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_ZERO_IRDRISK_SPEC'"></param>
+ 		</action>
+ 		
+ 		<action id="aODS_VALIDATE_CHKZERO_MAT" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_ZERO_MAT'"></param>
+ 		</action>
+ 
+ 		<action id="aODS_VALIDATE_CHKZERO_MKT_FXFUT" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_ZERO_MKT_FXFUT'"></param>
+ 		</action>
+ 
+ 		<action id="aODS_VALIDATE_CHKZERO_MKT_PRIC" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_ZERO_MKT_PRIC'"></param>
+ 		</action>
+ 
+ 		<action id="aODS_VALIDATE_CHKZERO_MKT_SPOT" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_ZERO_MKT_SPOT'"></param>
+ 		</action>
+ 
+ 		<action id="aODS_VALIDATE_CHKZERO_MV" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_ZERO_MV'"></param>
+ 		</action>
+ 		
+ 		<action id="aODS_VALIDATE_CHKZERO_MV_DETAIL" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_ZERO_MV_DETAIL'"></param>
+ 		</action>
+ 		
+ 		<action id="aODS_VALIDATE_CHKZERO_OPTCNTR_C" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_ZERO_OPTCNTR_C'"></param>
+ 		</action>
+ 
+ 		<action id="aODS_VALIDATE_CHKZERO_PFLD" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_ZERO_PFLD'"></param>
+ 		</action>
+ 
+ 		<action id="aODS_VALIDATE_CHKZERO_PFLD_COMB" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_ZERO_PFLD_COMB'"></param>
+ 		</action>
+ 
+ 		<action id="aODS_VALIDATE_CHKZERO_PFLD_TREE" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_ZERO_PFLD_TREE'"></param>
+ 		</action>
+ 
+ 		<action id="aODS_VALIDATE_CHKZERO_PL" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_ZERO_PL'"></param>
+ 		</action>
+ 
+ 		<action id="aODS_VALIDATE_CHKZERO_PL_SV" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_ZERO_PL_SV'"></param>
+ 		</action>
+ 
+ 		<action id="aODS_VALIDATE_CHKZERO_SEC_BND_TRIG" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_ZERO_SEC_BND_TRIG'"></param>
+ 		</action>
+ 
+ 		<action id="aODS_VALIDATE_CHKZERO_SEC_MKT" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_ZERO_SEC_MKT'"></param>
+ 		</action>
+ 
+ 		<action id="aODS_VALIDATE_CHKZERO_SEC_TRD" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_ZERO_SEC_TRD'"></param>
+ 		</action>
+ 
+ 		<action id="aODS_VALIDATE_CHKZERO_SECURITY" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_ZERO_SECURITY'"></param>
+ 		</action>
+ 
+ 		<action id="aODS_VALIDATE_CHKZERO_SV" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_ZERO_SV'"></param>
+ 		</action>
+ 
+ 		<action id="aODS_VALIDATE_CHKZERO_TRADE" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_ZERO_TRADE'"></param>
+ 		</action>
+ 
+ 		<action id="aODS_VALIDATE_CHKZERO_TRADE_HS" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_ZERO_TRADE_HS'"></param>
+ 		</action>
+ 
+ 		<action id="aODS_VALIDATE_CHKZERO_TRADE_LEG" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_ZERO_TRADE_LEG'"></param>
+ 		</action>
+ 
+ 		<action id="aODS_VALIDATE_CHKZERO_TRADE_LEG_HS" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_ZERO_TRADE_LEG_HS'"></param>
+ 		</action>
+ 
+ 		<action id="aODS_VALIDATE_CHKZERO_VAR_COM" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_ZERO_VAR_COM'"></param>
+ 		</action>
+ 
+ 		<action id="aODS_VALIDATE_CHKZERO_VAR_SCN" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_ZERO_VAR_SCN'"></param>
+ 		</action>
+ 		
+ 		<action id="aODS_VALIDATE_CHKZERO_XG" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_ZERO_XG'"></param>
+ 		</action>
+ 	</state>
+
+ 	<state id="sWORKFLOW_RESET" mode="parallel">
+ 		<action id="aODS_RESET_DATE" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_RESET_DATE'"></param>
+ 		</action>
+ 	</state>
+ 
+ 	<state id="sBACKUP" mode="sequence">
+ 		<action id="aLAUNCH_BACKUP_TOUCHKEY" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="touch $MXTWS/backup_DB_MxInfo-live.key"></param>
+ 		</action>
+ 
+ 		<action id="aLAUNCH_BACKUP_CHMOD" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="chmod 777 $MXTWS/backup_DB_MxInfo-live.key"></param>
+ 		</action>
+ 	</state>
+ 	
+ 	<state id="sMARKER_END" mode="sequence">
+ 		<action id="aMARKER_END" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-WF-EOD-LIVE-END"></param>
+ 		</action>
+ 	</state>
+ 
+ 	<state id="sEMAIL_END" mode="parallel">
+ 		<action id="aEMAIL_END" package="MX::Action::ExecuteCmd">
+ 			<param name="cmd" value="cat /dev/null | mailx -s'DATAMART - EOD LIVE - Done' $DATAMART_MAILTO"></param>
+ 		</action>
+
+		<action id="aNAGIOS_STOP" package="MX::Action::ExecuteCmd">
+			<param name="cmd" value="$MXBIN/TOOLS/NAGIOS/nagios_msg.sh I 'DATAMART - EOD LIVE' wf_eod_live.xml 00"></param>
+		</action>
+ 	</state>
+</state>
+ 
+</workflow>
