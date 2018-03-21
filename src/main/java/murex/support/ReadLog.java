@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map.Entry;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -14,7 +16,7 @@ public class ReadLog {
 	public static class LOGFILE {
 		String EODDATE, LOGFILE, WORKFLOW, ACTION;
 		Date STARTTIME, ENDTIME;
-		int RUNTIME; // minutes
+		long RUNTIME; //millsecond
 
 		public LOGFILE() {
 
@@ -36,7 +38,7 @@ public class ReadLog {
 			return ACTION;
 		}
 
-		public int getRUNTIME() {
+		public long getRUNTIME() {
 			return RUNTIME;
 		}
 
@@ -56,7 +58,7 @@ public class ReadLog {
 			ACTION = aCTION;
 		}
 
-		public void setRUNTIME(int rUNTIME) {
+		public void setRUNTIME(long rUNTIME) {
 			RUNTIME = rUNTIME;
 		}
 
@@ -83,6 +85,7 @@ public class ReadLog {
 		public void setENDTIME(String eNDTIME) {
 			ENDTIME = new Date(eNDTIME);
 		}
+		
 
 	}
 
@@ -135,11 +138,9 @@ public class ReadLog {
 		// Now create matcher object.
 		Matcher m = r.matcher(s);
 		if (m.find()) {
-			System.out.println("Found value: " + m.group(1));
 			return m.group(1);
 
 		} else {
-			System.out.println("NO MATCH");
 			return "";
 		}
 	}
@@ -156,12 +157,14 @@ public class ReadLog {
 			pattern = "(.*)\\-\\[.*";
 			log.setSTARTTIME(matchString(s, pattern));
 
-		} else if (s.contains("executed successfully")) {
-			String pattern = ".*Processing state \\[(.*)\\]";
+		} else if (s.contains("ended successfully")) {
+			String pattern = ".*State \\[(.*)\\].*";
 			log.setACTION(matchString(s, pattern));
 
 			pattern = "(.*)\\-\\[.*";
 			log.setENDTIME(matchString(s, pattern));
+			
+			
 
 		}
 
@@ -184,7 +187,7 @@ public class ReadLog {
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 		HashMap<String, LOGFILE> logs = new HashMap<String, ReadLog.LOGFILE>();
-		List<String> content = readFile("resources/logs/mx_launch_workflow.pl_20180302_234925_wf_eod_live.log");
+		List<String> content = readFile("resources/logs/test.log");
 		for (String line : content) {
 			LOGFILE log = new LOGFILE();
 			log = extractInfo(log, line);
@@ -192,12 +195,20 @@ public class ReadLog {
 			if (logs.containsKey(key)) {
 				log = logs.get(key);
 				log = extractInfo(log, line);
+				log.setRUNTIME(log.getENDTIME().getTime() - log.getSTARTTIME().getTime());
 				logs.put(key, log);
-				System.out.println(log.getACTION() + " " + log.getSTARTTIME() + "  " + log.getENDTIME());
 			} else if (log.getACTION() != null && !log.getACTION().equals("")) {
 				logs.put(key, log);
-				System.out.println(log.getACTION() + " " + log.getSTARTTIME() + "  " + log.getENDTIME());
 			}
+		}
+		
+		Set<Entry<String, LOGFILE>> set = logs.entrySet();
+		for (Entry entry : set )
+		{
+			LOGFILE log = (LOGFILE) entry.getValue();
+			System.out.println(log.getACTION()  + " " + log.getSTARTTIME() + " " + log.getENDTIME() + " " + parseTime(log.getRUNTIME()));
+			
+			
 		}
 	}
 
