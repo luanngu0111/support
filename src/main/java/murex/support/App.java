@@ -18,12 +18,11 @@ import org.w3c.dom.NodeList;
  *
  */
 public class App {
-	static String path = "resources/wf_eod_dwh.xml";
+	static String path = "resources/wf_eod_extract_daily.xml";
 	static Tree<String> root = new Tree<String>("workflow");
 	static Tree<String> first = root;
-	static String FILENAME = "resources/wf_eod_dwh_v2.txt";
+	static String FILENAME = "resources/wf_eod_live_v4.txt";
 
-	
 	public static Tree<String> Loop_v2(Tree<String> tree_node, Node stateNode) {
 		Element eElement = null;
 		eElement = (Element) stateNode;
@@ -45,8 +44,10 @@ public class App {
 					Element eChild = (Element) child;
 					String command = "";
 					if (child.getNodeName().equals("action")) {
-						Element param = (Element) child.getFirstChild().getNextSibling();
-						command = param.getAttribute("value");
+						if (child.getFirstChild() != null) {
+							Element param = (Element) child.getFirstChild().getNextSibling();
+							command = param.getAttribute("value");
+						}
 					}
 					node = tree_node.addChild(eChild.getAttribute("id"), child.getNodeName(), command);
 					tree_node = Loop_v2(node, child);
@@ -124,17 +125,15 @@ public class App {
 		PrintNextAction(baby_nephew);
 
 	}
-	
-	
+
 	public static void PrintNextAction_State(Tree<String> last_sibling) {
-	
-		if ("state".equals(last_sibling.type))
-		{
+
+		if ("state".equals(last_sibling.type)) {
 			System.out.println("Next State : ");
-			System.out.println("$MXBIN/workflow/mx_launch_workflow.pl -c " +last_sibling.data);
+			System.out.println("$MXBIN/workflow/mx_launch_workflow.pl -c " + last_sibling.data);
 			return;
 		}
-		
+
 		Tree<String> baby_nephew = last_sibling.children.get(last_sibling.children.size() - 1);
 		PrintNextAction_State(baby_nephew);
 
@@ -211,8 +210,8 @@ public class App {
 				Loop_v2(root, nNode);
 			}
 			DrawTree(first);
-			 WriteFile();
-			proceedWorkflow(first, "aSTG_FEED_MV_OM_03", false);
+			WriteFile();
+			proceedWorkflow(first, "aDEL_DIV_BEFORE", false);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
