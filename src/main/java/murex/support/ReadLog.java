@@ -1,11 +1,15 @@
 package murex.support;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -16,10 +20,11 @@ public class ReadLog {
 	public static class LOGFILE {
 		String EODDATE, LOGFILE, WORKFLOW, ACTION;
 		Date STARTTIME, ENDTIME;
-		long RUNTIME; //millsecond
+		long RUNTIME; // millsecond
 
 		public LOGFILE() {
-
+			STARTTIME = new Date();
+			ENDTIME = new Date();
 		}
 
 		public String getEODDATE() {
@@ -71,11 +76,19 @@ public class ReadLog {
 		}
 
 		public void setSTARTTIME(Date sTARTTIME) {
-			STARTTIME = sTARTTIME;
+			if (sTARTTIME == null) {
+				STARTTIME = new Date();
+			} else {
+				STARTTIME = sTARTTIME;
+			}
 		}
 
 		public void setENDTIME(Date eNDTIME) {
-			ENDTIME = eNDTIME;
+			if (eNDTIME == null) {
+				ENDTIME = STARTTIME;
+			} else {
+				ENDTIME = eNDTIME;
+			}
 		}
 
 		public void setSTARTTIME(String starttime) {
@@ -85,7 +98,28 @@ public class ReadLog {
 		public void setENDTIME(String eNDTIME) {
 			ENDTIME = new Date(eNDTIME);
 		}
-		
+
+		public String getSTARTTIME_formatted(String format) {
+			SimpleDateFormat dt = new SimpleDateFormat(format);
+			return dt.format(STARTTIME);
+		}
+
+		public String getSTARTTIME_formatted() {
+
+			SimpleDateFormat dt = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+			return dt.format(STARTTIME);
+		}
+
+		public String getENDTIME_formatted(String format) {
+			SimpleDateFormat dt = new SimpleDateFormat(format);
+			return dt.format(ENDTIME);
+		}
+
+		public String getENDTIME_formatted() {
+
+			SimpleDateFormat dt = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+			return dt.format(ENDTIME);
+		}
 
 	}
 
@@ -163,8 +197,6 @@ public class ReadLog {
 
 			pattern = "(.*)\\-\\[.*";
 			log.setENDTIME(matchString(s, pattern));
-			
-			
 
 		}
 
@@ -184,10 +216,11 @@ public class ReadLog {
 
 	}
 
-	public static void main(String[] args) {
-		// TODO Auto-generated method stub
-		HashMap<String, LOGFILE> logs = new HashMap<String, ReadLog.LOGFILE>();
-		List<String> content = readFile("resources/logs/test.log");
+	public static void execute(String inputfile, String outputfile) throws IOException {
+		LinkedHashMap<String, LOGFILE> logs = new LinkedHashMap<String, ReadLog.LOGFILE>();
+		String pattern = ".*(\\d{8}).*";
+		String eod_date = matchString(inputfile, pattern);
+		List<String> content = readFile(inputfile);
 		for (String line : content) {
 			LOGFILE log = new LOGFILE();
 			log = extractInfo(log, line);
@@ -201,14 +234,61 @@ public class ReadLog {
 				logs.put(key, log);
 			}
 		}
-		
+
 		Set<Entry<String, LOGFILE>> set = logs.entrySet();
-		for (Entry entry : set )
-		{
-			LOGFILE log = (LOGFILE) entry.getValue();
-			System.out.println(log.getACTION()  + " " + log.getSTARTTIME() + " " + log.getENDTIME() + " " + parseTime(log.getRUNTIME()));
-			
-			
+		BufferedWriter bw = null;
+		FileWriter fw = null;
+
+		try {
+			fw = new FileWriter(outputfile, true);
+			bw = new BufferedWriter(fw);
+			bw.append("EOD Date,State,Start,End,Run time\n");
+			for (Entry entry : set) {
+				LOGFILE log = (LOGFILE) entry.getValue();
+				System.out.println(log.getACTION() + ";" + log.getSTARTTIME_formatted() + ";"
+						+ log.getENDTIME_formatted() + ";" + parseTime(log.getRUNTIME()));
+
+				String ct = eod_date+ "," + log.getACTION() + "," + log.getSTARTTIME_formatted() + "," + log.getENDTIME_formatted()
+						+ "," + parseTime(log.getRUNTIME()) + "\n";
+
+				bw.append(ct);
+
+			}
+		} finally {
+
+			try {
+
+				if (bw != null)
+					bw.close();
+
+				if (fw != null)
+					fw.close();
+
+			} catch (IOException ex) {
+
+				ex.printStackTrace();
+
+			}
+
+		}
+	}
+
+	public static void main(String[] args) {
+		// TODO Auto-generated method stub
+		try {
+			File dir = new File("resources/logs/");
+			File[] directoryListing = dir.listFiles();
+			if (directoryListing != null) {
+				for (File child : directoryListing) {
+					// Do something with child
+
+					execute(child.getAbsolutePath(), "resources/wf_eod_live_stats.csv");
+				}
+			}
+
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 
