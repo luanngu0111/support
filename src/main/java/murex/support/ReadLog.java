@@ -21,6 +21,21 @@ public class ReadLog {
 		String EODDATE, LOGFILE, WORKFLOW, ACTION;
 		Date STARTTIME, ENDTIME;
 		long RUNTIME; // millsecond
+		static String workflow_pattern = ".*-\\[WORKFLOW.(.*)\\]\\ .*";
+		static String start_state_pattern = ".*Processing state \\[(.*)\\]";
+		static String end_state_pattern = ".*State \\[(.*)\\].*";
+
+		static String start_time_pattern = "(.*)\\-\\[.*";
+		static String end_time_pattern = "(.*)\\-\\[.*";
+
+		static String start_action_pattern = ".*Processing action \\[(.*)\\]";
+		static String end_action_pattern = ".*Action \\[(.*)\\].*";
+
+		static String start_state_string = "Processing state";
+		static String end_state_string = "ended successfully";
+
+		static String start_action_string = "Processing action";
+		static String end_action_string = "executed successfully";
 
 		public LOGFILE() {
 			STARTTIME = new Date();
@@ -179,23 +194,47 @@ public class ReadLog {
 		}
 	}
 
-	public static LOGFILE extractInfo(LOGFILE log, String s) {
+	public static LOGFILE extractInfoState(LOGFILE log, String s) {
 
-		if (s.contains("Processing state")) {
-			String pattern = ".*-\\[WORKFLOW.(.*)\\]\\ .*";
+		if (s.contains(LOGFILE.start_state_string)) {
+			String pattern = LOGFILE.workflow_pattern;
 			log.setWORKFLOW(matchString(s, pattern));
 
-			pattern = ".*Processing state \\[(.*)\\]";
+			pattern = LOGFILE.start_state_pattern;
 			log.setACTION(matchString(s, pattern));
 
-			pattern = "(.*)\\-\\[.*";
+			pattern = LOGFILE.start_time_pattern;
 			log.setSTARTTIME(matchString(s, pattern));
 
-		} else if (s.contains("ended successfully")) {
-			String pattern = ".*State \\[(.*)\\].*";
+		} else if (s.contains(LOGFILE.end_state_string)) {
+			String pattern = LOGFILE.end_state_pattern;
 			log.setACTION(matchString(s, pattern));
 
-			pattern = "(.*)\\-\\[.*";
+			pattern = LOGFILE.end_time_pattern;
+			log.setENDTIME(matchString(s, pattern));
+
+		}
+
+		return log;
+	}
+
+	public static LOGFILE extractInfoAction(LOGFILE log, String s) {
+
+		if (s.contains(LOGFILE.start_action_string)) {
+			String pattern = LOGFILE.workflow_pattern;
+			log.setWORKFLOW(matchString(s, pattern));
+
+			pattern = LOGFILE.start_action_pattern;
+			log.setACTION(matchString(s, pattern));
+
+			pattern = LOGFILE.start_time_pattern;
+			log.setSTARTTIME(matchString(s, pattern));
+
+		} else if (s.contains(LOGFILE.end_action_string)) {
+			String pattern = LOGFILE.end_action_pattern;
+			log.setACTION(matchString(s, pattern));
+
+			pattern = LOGFILE.end_time_pattern;
 			log.setENDTIME(matchString(s, pattern));
 
 		}
@@ -223,11 +262,11 @@ public class ReadLog {
 		List<String> content = readFile(inputfile);
 		for (String line : content) {
 			LOGFILE log = new LOGFILE();
-			log = extractInfo(log, line);
+			log = extractInfoState(log, line);
 			String key = log.getACTION();
 			if (logs.containsKey(key)) {
 				log = logs.get(key);
-				log = extractInfo(log, line);
+				log = extractInfoState(log, line);
 				log.setRUNTIME(log.getENDTIME().getTime() - log.getSTARTTIME().getTime());
 				logs.put(key, log);
 			} else if (log.getACTION() != null && !log.getACTION().equals("")) {
@@ -248,8 +287,8 @@ public class ReadLog {
 				System.out.println(log.getACTION() + ";" + log.getSTARTTIME_formatted() + ";"
 						+ log.getENDTIME_formatted() + ";" + parseTime(log.getRUNTIME()));
 
-				String ct = eod_date+ "," + log.getACTION() + "," + log.getSTARTTIME_formatted() + "," + log.getENDTIME_formatted()
-						+ "," + parseTime(log.getRUNTIME()) + "\n";
+				String ct = eod_date + "," + log.getACTION() + "," + log.getSTARTTIME_formatted() + ","
+						+ log.getENDTIME_formatted() + "," + parseTime(log.getRUNTIME()) + "\n";
 
 				bw.append(ct);
 

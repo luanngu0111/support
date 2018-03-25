@@ -4,6 +4,8 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Date;
+import java.util.List;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -22,15 +24,46 @@ public class App {
 	static Tree<String> root = new Tree<String>("workflow");
 	static Tree<String> first = root;
 	static String FILENAME = "resources/wf_eod_dwh_v3.txt";
+	static String crashed_action = "aSTG_FEED_DEALCRD";
 	static Workflow wf = new Workflow();
 
+	enum LAUNCHER {
+		RERUN, XTR_CMD
+	}
+
 	public static void main(String[] args) {
-		ProceedWorkflow();
+		LAUNCHER lch = null;
+		FILENAME = path.substring(path.lastIndexOf("/") + 1, path.lastIndexOf("."));
+		Date today = new Date();
+		String timestamp = today.getYear() + "_" + today.getMonth() + "_" + today.getDate();
+		for (int i = 0; i < args.length; i = i + 2) {
+			switch (args[i]) {
+			case "-c":
+				crashed_action = args[i + 1];
+				FILENAME += "_" + crashed_action + "_" + timestamp + ".txt";
+				lch = LAUNCHER.RERUN;
+				break;
+			case "-o":
+				FILENAME = args[i + 1];
+				break;
+			case "-x":
+				lch = LAUNCHER.XTR_CMD;
+				break;
+			default:
+				break;
+			}
+		}
+
+		if (lch == LAUNCHER.RERUN) {
+			ProceedWorkflow();
+		}
 
 	}
 
 	public static void ConvertXmlToTree() {
+		wf = new Workflow();
 		String wf_name = path.substring(path.lastIndexOf("/") + 1, path.lastIndexOf("."));
+
 		try {
 
 			File fXmlFile = new File(path);
@@ -64,10 +97,19 @@ public class App {
 	}
 
 	public static void ProceedWorkflow() {
+
 		ConvertXmlToTree();
 		System.out.println("------------------------Print Action-----------------------------");
-		wf.Draw("aSTG_FEED_DEALCRD");
+		wf.Draw(crashed_action);
 		WriteFile(wf._result);
+	}
+
+	public static void ExtractCommands(String[] commands) {
+		ConvertXmlToTree();
+		List<String> cmds = wf.ExtractCommand(commands);
+		for (String cmd : cmds) {
+			System.out.println(cmd);
+		}
 	}
 
 	public static void WriteFile(String output) {

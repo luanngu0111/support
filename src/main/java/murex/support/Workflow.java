@@ -210,6 +210,10 @@ public class Workflow {
 					return child.command;
 				}
 				result = ExtractCommand(child, action);
+				if (!result.equals(""))
+				{
+					return result;
+				}
 			}
 		}
 		result = ExtractCommand(tree.next, action);
