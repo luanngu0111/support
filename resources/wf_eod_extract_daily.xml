@@ -2,1157 +2,1185 @@
 <workflow xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
  xsi:noNamespaceSchemaLocation="workflow.xsd" id="EOD_EXTRACTS">
 
-<state id="sEOD_EXTRACT_DAILY" mode="sequence">
+	<state id="sEOD_EXTRACT_DAILY" mode="sequence">
 
-  <state id="sEMAIL_START" mode="parallel">
-	<action id="aEMAIL_START" package="MX::Action::ExecuteCmd">
-		<param name="cmd" value="cat /dev/null | mailx -s'DATAMART - EOD EXTRACTS - Starting' $DATAMART_MAILTO"></param>
-	</action>
+		<state id="sEMAIL_START" mode="parallel">
+			<action id="aEMAIL_START" package="MX::Action::ExecuteCmd">
+				<param name="cmd" value="cat /dev/null | mailx -s'DATAMART - EOD EXTRACTS - Starting' $DATAMART_MAILTO"/>
+			</action>
 
-        <action id="aNAGIOS_START" package="MX::Action::ExecuteCmd">
-                <param name="cmd" value="$MXBIN/TOOLS/NAGIOS/nagios_msg.sh I 'DATAMART - EOD EXTRACTS DAILY' wf_eod_extract_daily.xml 103"></param>
-        </action>
-	
-  </state>
+			<action id="aNAGIOS_START" package="MX::Action::ExecuteCmd">
+				<param name="cmd" value="$MXBIN/TOOLS/NAGIOS/nagios_msg.sh I 'DATAMART - EOD EXTRACTS DAILY' wf_eod_extract_daily.xml 103"/>
+			</action>
 
-  <state id="sMARKER_START" mode="sequence">
-	<action id="aMARKER_START" package="MX::Action::ExecuteCmd">
-		<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-WF-EOD-EXTRACT-DAILY-START"></param>
-	</action>
-  </state>
+		</state>
 
-  <state id="sCHECK_DATE" mode="sequence">
-	<action id="aODS_CHK_DATE" package="MX::Action::ExecuteCmd">
-		<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_DATE'"></param>
-	</action>
-  </state>
+		<state id="sMARKER_START" mode="sequence">
+			<action id="aMARKER_START" package="MX::Action::ExecuteCmd">
+				<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-WF-EOD-EXTRACT-DAILY-START"/>
+			</action>
+		</state>
 
-  <state id="sDATE_INIT" mode="sequence">
-	<action id="aODS_LOAD_EOD_DATE" package="MX::Action::ExecuteCmd">
-		<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_LOAD_EOD_LIVE_DATE'"></param>
-	</action>
+		<state id="sCHECK_DATE" mode="sequence">
+			<action id="aODS_CHK_DATE" package="MX::Action::ExecuteCmd">
+				<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_DATE'"/>
+			</action>
+		</state>
 
-	<action id="aODS_VALIDATE_MULTIPLE_DATE" package="MX::Action::ExecuteCmd">
-		<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_MULTIPLE_DATE'"></param>
-	</action>
-  </state>
+		<state id="sDATE_INIT" mode="sequence">
+			<action id="aODS_LOAD_EOD_DATE" package="MX::Action::ExecuteCmd">
+				<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_LOAD_EOD_LIVE_DATE'"/>
+			</action>
 
-  <state id="sODS_VALIDATE_INTEGRITY" mode="parallel">
-		<action id="aODS_VALIDATE_CHKZERO_CPTY" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_ZERO_CPTY'"></param>
-		</action>
+			<action id="aODS_VALIDATE_MULTIPLE_DATE" package="MX::Action::ExecuteCmd">
+				<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_MULTIPLE_DATE'"/>
+			</action>
+		</state>
 
-		<action id="aODS_VALIDATE_CHKZERO_CS" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_ZERO_CS'"></param>
-		</action>
+		<state id="sODS_VALIDATE_INTEGRITY" mode="parallel">
+			<action id="aODS_VALIDATE_CHKZERO_CPTY" package="MX::Action::ExecuteCmd">
+				<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_ZERO_CPTY'"/>
+			</action>
 
-		<action id="aODS_VALIDATE_CHKZERO_CVSPT" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_ZERO_CVSPT'"></param>
-		</action>
+			<action id="aODS_VALIDATE_CHKZERO_CS" package="MX::Action::ExecuteCmd">
+				<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_ZERO_CS'"/>
+			</action>
 
-		<action id="aODS_VALIDATE_CHKZERO_DT" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_ZERO_DT'"></param>
-		</action>
+			<action id="aODS_VALIDATE_CHKZERO_CVSPT" package="MX::Action::ExecuteCmd">
+				<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_ZERO_CVSPT'"/>
+			</action>
 
-		<action id="aODS_VALIDATE_CHKZERO_EVENT_LB" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_ZERO_EVENT_LB'"></param>
-		</action>
+			<action id="aODS_VALIDATE_CHKZERO_DT" package="MX::Action::ExecuteCmd">
+				<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_ZERO_DT'"/>
+			</action>
 
-		<action id="aODS_VALIDATE_CHKZERO_FX_FUT" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_ZERO_FX_FUT'"></param>
-		</action>
+			<action id="aODS_VALIDATE_CHKZERO_EVENT_LB" package="MX::Action::ExecuteCmd">
+				<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_ZERO_EVENT_LB'"/>
+			</action>
 
-		<action id="aODS_VALIDATE_CHKZERO_GEN" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_ZERO_GEN'"></param>
-		</action>
+			<action id="aODS_VALIDATE_CHKZERO_FX_FUT" package="MX::Action::ExecuteCmd">
+				<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_ZERO_FX_FUT'"/>
+			</action>
 
-		<action id="aODS_VALIDATE_CHKZERO_GREEKS" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_ZERO_GREEKS'"></param>
-		</action>
+			<action id="aODS_VALIDATE_CHKZERO_GEN" package="MX::Action::ExecuteCmd">
+				<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_ZERO_GEN'"/>
+			</action>
 
-		<action id="aODS_VALIDATE_CHKZERO_MAT" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_ZERO_MAT'"></param>
-		</action>
+			<action id="aODS_VALIDATE_CHKZERO_GREEKS" package="MX::Action::ExecuteCmd">
+				<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_ZERO_GREEKS'"/>
+			</action>
 
-		<action id="aODS_VALIDATE_CHKZERO_MKT_FXFUT" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_ZERO_MKT_FXFUT'"></param>
-		</action>
+			<action id="aODS_VALIDATE_CHKZERO_MAT" package="MX::Action::ExecuteCmd">
+				<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_ZERO_MAT'"/>
+			</action>
 
-		<action id="aODS_VALIDATE_CHKZERO_MKT_PRIC" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_ZERO_MKT_PRIC'"></param>
-		</action>
+			<action id="aODS_VALIDATE_CHKZERO_MKT_FXFUT" package="MX::Action::ExecuteCmd">
+				<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_ZERO_MKT_FXFUT'"/>
+			</action>
 
-		<action id="aODS_VALIDATE_CHKZERO_MKT_SPOT" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_ZERO_MKT_SPOT'"></param>
-		</action>
+			<action id="aODS_VALIDATE_CHKZERO_MKT_PRIC" package="MX::Action::ExecuteCmd">
+				<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_ZERO_MKT_PRIC'"/>
+			</action>
 
-		<action id="aODS_VALIDATE_CHKZERO_MV" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_ZERO_MV'"></param>
-		</action>
+			<action id="aODS_VALIDATE_CHKZERO_MKT_SPOT" package="MX::Action::ExecuteCmd">
+				<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_ZERO_MKT_SPOT'"/>
+			</action>
 
-		<action id="aODS_VALIDATE_CHKZERO_OPTCNTR_C" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_ZERO_OPTCNTR_C'"></param>
-		</action>
+			<action id="aODS_VALIDATE_CHKZERO_MV" package="MX::Action::ExecuteCmd">
+				<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_ZERO_MV'"/>
+			</action>
 
-		<action id="aODS_VALIDATE_CHKZERO_PFLD" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_ZERO_PFLD'"></param>
-		</action>
+			<action id="aODS_VALIDATE_CHKZERO_OPTCNTR_C" package="MX::Action::ExecuteCmd">
+				<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_ZERO_OPTCNTR_C'"/>
+			</action>
 
-		<action id="aODS_VALIDATE_CHKZERO_PFLD_COMB" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_ZERO_PFLD_COMB'"></param>
-		</action>
+			<action id="aODS_VALIDATE_CHKZERO_PFLD" package="MX::Action::ExecuteCmd">
+				<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_ZERO_PFLD'"/>
+			</action>
 
-		<action id="aODS_VALIDATE_CHKZERO_PFLD_TREE" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_ZERO_PFLD_TREE'"></param>
-		</action>
+			<action id="aODS_VALIDATE_CHKZERO_PFLD_COMB" package="MX::Action::ExecuteCmd">
+				<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_ZERO_PFLD_COMB'"/>
+			</action>
 
-		<action id="aODS_VALIDATE_CHKZERO_PL" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_ZERO_PL'"></param>
-		</action>
+			<action id="aODS_VALIDATE_CHKZERO_PFLD_TREE" package="MX::Action::ExecuteCmd">
+				<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_ZERO_PFLD_TREE'"/>
+			</action>
 
-<!--		<action id="aODS_VALIDATE_CHKZERO_PL_SV" package="MX::Action::ExecuteCmd">											-->
-<!--			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_ZERO_PL_SV'"></param> -->
-<!--		</action>                                                                                                           -->
+			<action id="aODS_VALIDATE_CHKZERO_PL" package="MX::Action::ExecuteCmd">
+				<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_ZERO_PL'"/>
+			</action>
 
-		<action id="aODS_VALIDATE_CHKZERO_SEC_BND_TRIG" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_ZERO_SEC_BND_TRIG'"></param>
-		</action>
+			<!--		<action id="aODS_VALIDATE_CHKZERO_PL_SV" package="MX::Action::ExecuteCmd">											-->
+			<!--			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_ZERO_PL_SV'"></param> -->
+			<!--		</action>                                                                                                           -->
 
-		<action id="aODS_VALIDATE_CHKZERO_SEC_MKT" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_ZERO_SEC_MKT'"></param>
-		</action>
+			<action id="aODS_VALIDATE_CHKZERO_SEC_BND_TRIG" package="MX::Action::ExecuteCmd">
+				<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_ZERO_SEC_BND_TRIG'"/>
+			</action>
 
-		<action id="aODS_VALIDATE_CHKZERO_SEC_TRD" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_ZERO_SEC_TRD'"></param>
-		</action>
+			<action id="aODS_VALIDATE_CHKZERO_SEC_MKT" package="MX::Action::ExecuteCmd">
+				<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_ZERO_SEC_MKT'"/>
+			</action>
 
-		<action id="aODS_VALIDATE_CHKZERO_SECURITY" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_ZERO_SECURITY'"></param>
-		</action>
+			<action id="aODS_VALIDATE_CHKZERO_SEC_TRD" package="MX::Action::ExecuteCmd">
+				<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_ZERO_SEC_TRD'"/>
+			</action>
 
-<!--		<action id="aODS_VALIDATE_CHKZERO_SV" package="MX::Action::ExecuteCmd">												-->
-<!--			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_ZERO_SV'"></param>    -->
-<!--		</action>                                                                                                           -->
+			<action id="aODS_VALIDATE_CHKZERO_SECURITY" package="MX::Action::ExecuteCmd">
+				<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_ZERO_SECURITY'"/>
+			</action>
 
-		<action id="aODS_VALIDATE_CHKZERO_TRADE" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_ZERO_TRADE'"></param>
-		</action>
+			<!--		<action id="aODS_VALIDATE_CHKZERO_SV" package="MX::Action::ExecuteCmd">												-->
+			<!--			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_ZERO_SV'"></param>    -->
+			<!--		</action>                                                                                                           -->
 
-		<action id="aODS_VALIDATE_CHKZERO_TRADE_HS" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_ZERO_TRADE_HS'"></param>
-		</action>
-  </state>
+			<action id="aODS_VALIDATE_CHKZERO_TRADE" package="MX::Action::ExecuteCmd">
+				<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_ZERO_TRADE'"/>
+			</action>
 
-  <state id="sEXTRACTS" mode="parallel">
+			<action id="aODS_VALIDATE_CHKZERO_TRADE_HS" package="MX::Action::ExecuteCmd">
+				<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_CHK_ZERO_TRADE_HS'"/>
+			</action>
+		</state>
 
-	<state id="sEXTRACT1" mode="sequence">
+		<state id="sEXTRACTS" mode="parallel">
 
-		<action id="aXTC_INSTR_CLT" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="sleep 5;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTC-INSTR-CLT"></param>
-		</action>
+			<state id="sEXTRACT1" mode="sequence">
 
-		<action id="aXTC_COM_TRN" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTC-COM-TRN"></param>
-		</action>
-
-		<action id="aXTR_FXNG_EQS" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-FXNG-EQS"></param>
-		</action>
-
-		<action id="aXTR_CGY_COM_GRK" package="MX::Action::ExecuteCmd"> <!--MCI -->
-		        <param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-CGY-COM-GRK"></param>
-		</action>
-
-		<action id="aXTC_TRACKBOND" package="MX::Action::ExecuteCmd"> 
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTC-TRACKBOND"></param>
-		</action>
-
-		<action id="aXTC_ASIANPASTAVERAGE" package="MX::Action::ExecuteCmd"> 
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTC-ASIANPASTAVERAGE"></param>
-		</action>
-
-		<action id="aXTC_POSFXOPT" package="MX::Action::ExecuteCmd"> 
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTC-POSFXOPT"></param>
-		</action>
-
-		<action id="aXTC_POSUSFXOPT" package="MX::Action::ExecuteCmd"> 
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTC-POSUSFXOPT"></param>
-		</action>
-
-		<action id="aXTC_DSKFXOPT" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTC-DSK-FX-OPT"></param>
-	        </action>
-
-	        <action id="aXTC_DSKFXFWD" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTC-DSK-FX-FWD"></param>
-	        </action>
-
-                <action id="aXTC_FODSKNY" package="MX::Action::ExecuteCmd">
-                        <param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTC-FO-DSK-NY"></param>
-                </action>
-
-                <action id="aXTC_MO_LCH_SWAP" package="MX::Action::ExecuteCmd">
-                        <param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTC-MO-LCH-SWAP"></param>
-                </action>
-
-                <action id="aXTC_BND_DSK_EQU" package="MX::Action::ExecuteCmd">
-                         <param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTC-BND-DSK-EQU"></param>
-                </action>
-
-                <action id="aXTR_PL_FX" package="MX::Action::ExecuteCmd">
-                        <param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-PL-FX"></param>
-                </action>
-
-                <action id="aXTR_XG_ASN_OPT" package="MX::Action::ExecuteCmd">
-                        <param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-XG-ASN-OPT"></param>
-                </action>
-
-                <action id="aXTR_CUSIP" package="MX::Action::ExecuteCmd">
-                        <param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-CUSIP"></param>
-                </action>
-
-                <action id="aXTR_ZDMSWAP" package="MX::Action::ExecuteCmd">
-                        <param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-ZDMSWAP-PAST"></param>
-                </action>
-				<action id="aXTC_FODSKDLY" package="MX::Action::ExecuteCmd">
-						<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTC-FO-DSK-DLY"></param>
+				<action id="aXTC_INSTR_CLT" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="sleep 5;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTC-INSTR-CLT"/>
 				</action>
-		
+
+				<action id="aXTC_COM_TRN" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTC-COM-TRN"/>
+				</action>
+
+				<action id="aXTR_FXNG_EQS" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-FXNG-EQS"/>
+				</action>
+
+				<action id="aXTR_CGY_COM_GRK" package="MX::Action::ExecuteCmd">
+					<!--MCI -->
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-CGY-COM-GRK"/>
+				</action>
+
+				<action id="aXTC_TRACKBOND" package="MX::Action::ExecuteCmd"> 
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTC-TRACKBOND"/>
+				</action>
+
+				<action id="aXTC_ASIANPASTAVERAGE" package="MX::Action::ExecuteCmd"> 
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTC-ASIANPASTAVERAGE"/>
+				</action>
+
+				<action id="aXTC_POSFXOPT" package="MX::Action::ExecuteCmd"> 
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTC-POSFXOPT"/>
+				</action>
+
+				<action id="aXTC_POSUSFXOPT" package="MX::Action::ExecuteCmd"> 
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTC-POSUSFXOPT"/>
+				</action>
+
+				<action id="aXTC_DSKFXOPT" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTC-DSK-FX-OPT"/>
+				</action>
+
+				<action id="aXTC_DSKFXFWD" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTC-DSK-FX-FWD"/>
+				</action>
+
+				<action id="aXTC_FODSKNY" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTC-FO-DSK-NY"/>
+				</action>
+
+				<action id="aXTC_MO_LCH_SWAP" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTC-MO-LCH-SWAP"/>
+				</action>
+
+				<action id="aXTC_BND_DSK_EQU" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTC-BND-DSK-EQU"/>
+				</action>
+
+				<action id="aXTR_PL_FX" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-PL-FX"/>
+				</action>
+
+				<action id="aXTR_XG_ASN_OPT" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-XG-ASN-OPT"/>
+				</action>
+
+				<action id="aXTR_CUSIP" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-CUSIP"/>
+				</action>
+
+				<action id="aXTR_ZDMSWAP" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-ZDMSWAP-PAST"/>
+				</action>
+				<action id="aXTC_FODSKDLY" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTC-FO-DSK-DLY"/>
+				</action>
+
+
+			</state>
+
+
+			<state id="sEXTRACT2" mode="sequence">
+
+				<action id="aXTR_CTP" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="sleep 10;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-CTP"/>
+				</action>
+
+				<action id="aXTR_INSTR" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-INSTR"/>
+				</action>
+
+				<action id="aXTR_INSTR_BD" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-INSTR-BD"/>
+				</action>
+
+				<action id="aXTR_INSTR_BDC" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-INSTR-BDC"/>
+				</action>
+
+				<action id="aXTR_INSTR_BDCC" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-INSTR-BDCC"/>
+				</action>
+
+				<action id="aXTR_INSTR_BDS" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-INSTR-BDS"/>
+				</action>
+
+				<action id="aXTR_INSTR_EQ" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-INSTR-EQ"/>
+				</action>
+
+				<action id="aXTR_INSTR_VAL" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-INSTR-VAL"/>
+				</action>
+
+				<action id="aXTR_MKTPRC_BND" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-MKTPRC-BND"/>
+				</action>
+
+				<action id="aXTR_MKTPRC_EQD" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-MKTPRC-EQD"/>
+				</action>
+
+				<action id="aXTR_MKTSPOT" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-MKTSPOT"/>
+				</action>
+
+				<action id="aXTR_MKTSPOTEOM" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-MKTSPOTEOM"/>
+				</action>
+
+				<action id="aXTR_PTF" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-PTF"/>
+				</action>
+
+				<action id="aXTR_XTI_EQDLB" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-XTI-EQDLB"/>
+				</action>	
+
+				<action id="aXTR_XTI_EQDLBGA" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-XTI-EQDLBGA"/>
+				</action>
+
+				<action id="aXTR_EQDVOL" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-EQDVOL"/>
+				</action>
+
+				<action id="aXTC_FOCS8" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTC-FOCS8"/>
+				</action>
+
+				<action id="aXTR-DT179" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-DT179"/>
+				</action>	
+
+				<action id="aXTR_VIPFXCTRL" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-VIPFXCTRL"/>
+				</action>
+
+				<action id="aXTR_OPS_NDF" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-OPS-NDF"/>
+				</action>
+
+				<action id="aXTR_RATCHET" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-RATCHET"/>
+				</action>
+
+			</state>		
+
+
+			<state id="sEXTRACT3" mode="sequence">
+
+				<action id="aXTR_RCEQDCOM" package="MX::Action::ExecuteCmd">
+					<!-- MCI -->
+					<param name="cmd" value="sleep 15;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-RCCOM"/>
+				</action>
+
+				<action id="aXTR_RCCOM_P" package="MX::Action::ExecuteCmd">
+					<!-- MCI -->
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-RCCOM-P"/>
+				</action>
+
+				<action id="aXTR_RCEQD" package="MX::Action::ExecuteCmd">
+					<!-- MCI -->
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-RCEQD"/>
+				</action>
+
+				<action id="aXTR_RCEQD_P" package="MX::Action::ExecuteCmd">
+					<!-- MCI -->
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-RCEQD-P"/>
+				</action>
+
+				<action id="aXTR_RCDIV" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-RCDIV"/>
+				</action>
+
+				<action id="aXTR_TXN" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-TXN &amp;"/>
+				</action>
+
+				<action id="aXTR_OTCCLR" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-OTCCLR"/>
+				</action>
+
+				<action id="aXTR_OTCCLCS" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-OTCCLCS"/>
+				</action>
+
+				<action id="aXTR_OTCICCS" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-OTCICCS"/>
+				</action>
+
+				<action id="aXTR_OTCDLCH" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-OTCDLCH"/>
+				</action>
+
+				<action id="aXTR_OTCCLDU" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-OTCCLDU"/>
+				</action>
+
+				<action id="aXTR_RCOC" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-RCOC"/>
+				</action>
+
+				<action id="aXTR_POS" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-POS"/>
+				</action>
+
+				<action id="aXTR_POS606" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTC-POS606"/>
+				</action>
+
+				<action id="aXTR_POSGA" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-POSGA"/>
+				</action>
+
+				<action id="aXTR_REPO" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-REPO"/>
+				</action>
+
+				<action id="aXTC_RLCHCS" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTC-RLCHCS"/>
+				</action>
+
+				<action id="aXTC_RLCHTR" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTC-RLCHTR"/>
+				</action>
+
+				<action id="aXTR_RCOCFXI" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-RCOCFXI"/>
+				</action>
+
+				<action id="aXTR_POS_PIN" package="MX::Action::ExecuteCmd"> 
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-POS-PIN"/>
+				</action>	
+
+				<action id="aXTR_POS_OTC" package="MX::Action::ExecuteCmd"> 
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-POS-OTC"/>
+				</action>	
+
+			</state>
+
+
+			<state id="sEXTRACT4" mode="sequence">
+
+				<action id="aXTR_INSTR_FX" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="sleep 20;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-INSTR-FX"/>
+				</action>
+
+				<action id="aXTR_MATURITY" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-MATURITY"/>
+				</action>
+
+				<action id="aXTR_OPT_CNTR" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-OPT-CNTR"/>
+				</action>
+
+				<action id="aXTR_DAILY_V" package="MX::Action::ExecuteCmd">
+					<!-- MCI -->
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-COMDAILY-V"/>
+				</action>
+
+				<action id="aXTR_LST_THEO" package="MX::Action::ExecuteCmd">
+					<!-- MCI -->
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-COMLST-THEO"/>
+				</action>
+
+				<action id="aXTR_COMSWAP_PHY" package="MX::Action::ExecuteCmd">
+					<!-- MCI -->
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-COMSWAP-PHY"/>
+				</action>
+
+				<action id="aXTR_COMSWAP_PRC" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-COMSWAP-PRC"/>
+				</action>
+
+				<action id="aXTR_MO_COMPL" package="MX::Action::ExecuteCmd">
+					<!-- MCI -->
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-MO-COMPL"/>
+				</action>
+
+				<action id="aXTR_MO_ICE_NMX" package="MX::Action::ExecuteCmd">
+					<!-- MCI -->
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-MO-ICE-NMX"/>
+				</action>
+
+				<action id="aXTR_MO_INTL" package="MX::Action::ExecuteCmd">
+					<!-- MCI -->
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-MO-INTL"/>
+				</action>
+
+				<action id="aXTR_MO_POS" package="MX::Action::ExecuteCmd">
+					<!-- MCI -->
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-MO-POS"/>
+				</action>
+
+				<action id="aXTR_MO_PX" package="MX::Action::ExecuteCmd">
+					<!-- MCI -->
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-MO-PX"/>
+				</action>
+
+				<action id="aXTR_MO_EQD" package="MX::Action::ExecuteCmd">
+					<!-- MCI -->
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-MO-EQD"/>
+				</action>
+
+				<action id="aXTR_MO_COM" package="MX::Action::ExecuteCmd">
+					<!-- MCI -->
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-MO-COM"/>
+				</action>
+
+				<action id="aXTR_MO_GRK" package="MX::Action::ExecuteCmd">
+					<!-- MCI -->
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-MO-GRK"/>
+				</action>
+
+				<action id="aXTR_MO_MV" package="MX::Action::ExecuteCmd">
+					<!-- MCI -->
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-MO-MV"/>
+				</action>
+
+				<action id="aXTR_COMEQD_NB" package="MX::Action::ExecuteCmd">
+					<!-- MCI -->
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-COMEQD-NB"/>
+				</action>		
+
+				<action id="aXTR_MKTPRC_MBS" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-MKTPRC-MBS"/>
+				</action>
+
+			</state>
+
+
+			<state id="sEXTRACT5" mode="sequence">
+
+				<action id="aXTR_SATACRD" package="MX::Action::ExecuteCmd"> 
+					<param name="cmd" value="sleep 25;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-SATACRD"/>
+				</action>
+
+				<action id="aXTR_SATACRM" package="MX::Action::ExecuteCmd"> 
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-SATACRM"/>
+				</action>
+
+				<action id="aXTR_PL_PANDL" package="MX::Action::ExecuteCmd"> 
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-PL-PANDL"/>
+				</action>		
+
+				<action id="aXTR_PL_SWAPS" package="MX::Action::ExecuteCmd"> 
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-PL-SWAPS"/>
+				</action>
+
+				<action id="aXTR_PL_PANDL_DAILY" package="MX::Action::ExecuteCmd"> 
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-PL-PANDL-DAILY "/>
+				</action>		
+
+				<action id="aXTR_PL_SWAPS_DAILY" package="MX::Action::ExecuteCmd"> 
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-PL-SWAPS-DAILY"/>
+				</action>	
+
+				<action id="aXTR_PL_PANDL_EXC_DAILY" package="MX::Action::ExecuteCmd"> 
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-PL-PANDL-EXC-DAILY"/>
+				</action>	
+
+				<action id="aXTR_PL_PANDL_EXC_MONTHLY" package="MX::Action::ExecuteCmd"> 
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-PL-PANDL-EXC-MONTHLY"/>
+				</action>	
+
+				<action id="aXTR_XTR_SAT_REAL_D" package="MX::Action::ExecuteCmd"> 
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-SAT-REAL-D"/>
+				</action>	
+
+			</state>
+
+
+			<state id="sEXTRACT6" mode="sequence">
+
+				<action id="aXTR_COMVAR_CGA" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="sleep 30;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-COMVAR-CGA &amp;"/>
+				</action>
+
+				<action id="aXTR_FIMTL_PL2" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="sleep 38;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-FIMTL-PL2"/>
+				</action>
+
+				<action id="aXTR_ALM_PL2" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-ALM-PL2"/>
+				</action>
+
+				<action id="aXTR_EQDMO_PL2" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-EQDMO-PL2"/>
+				</action>
+
+				<action id="aXTR_EXT_PL2" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-EXT-PL2"/>
+				</action>
+
+				<action id="aXTR_FEN_PL2" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-FEN-PL2"/>
+				</action>
+
+				<action id="aXTR_FXMO_PL2" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-FXMO-PL2"/>
+				</action>
+
+				<action id="aXTR_TOR_PL2" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-TOR-PL2"/>
+				</action>
+
+				<action id="aXTR_BDFWD" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-BDFWD"/>
+				</action>
+
+				<action id="aXTC_CRECNTP" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTC-CRECNTP"/>
+				</action>
+
+				<action id="aXTC_CREPFLS" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTC-CREPFLS"/>
+				</action>
+
+				<action id="aXTR_COMVAR_CGA2" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-COMVAR-CGA2"/>
+				</action>
+
+			</state>
+
+
+			<state id="sEXTRACT7" mode="sequence">
+
+				<action id="aXTR_COMVAR_10P" package="MX::Action::ExecuteCmd">
+					<!-- MCI -->
+					<param name="cmd" value="sleep 35;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-COMVAR-10P"/>
+				</action>
+
+				<action id="aXTR_COMVAR_GAS" package="MX::Action::ExecuteCmd">
+					<!-- MCI -->
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-COMVAR-GAS"/>
+				</action>
+
+				<action id="aXTR_COMVAR_OIL" package="MX::Action::ExecuteCmd">
+					<!-- MCI -->
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-COMVAR-OIL"/>
+				</action>
+
+				<action id="aXTR_OPS_MTM" package="MX::Action::ExecuteCmd">
+					<!-- MCI -->
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-OPS-MTM"/>
+				</action>
+
+				<action id="aXTR-OPS-STORAGE" package="MX::Action::ExecuteCmd">
+					<!-- MCI -->
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-OPS-STORAGE"/>
+				</action>
+
+				<action id="aXTI-CFE" package="MX::Action::ExecuteCmd">
+					<!-- MCI -->
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTI-CFE"/>
+				</action>
+
+				<action id="aXTR-BO-PMTS10" package="MX::Action::ExecuteCmd">
+					<!-- MCI -->
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-BO-PMTS10"/>
+				</action>
+
+				<action id="aXTR-CASHV" package="MX::Action::ExecuteCmd">
+					<!-- MCI -->
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-CASHV"/>
+				</action>
+
+				<action id="aXTR-EQTFIX" package="MX::Action::ExecuteCmd"> 
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-EQTFIX"/>
+				</action>
+
+				<action id="aXTR-EQTEXP" package="MX::Action::ExecuteCmd"> 
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-EQTEXP"/>
+				</action>
+
+				<action id="aXTR-GTRVAL" package="MX::Action::ExecuteCmd"> 
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-GTR-VAL"/>
+				</action>			
+
+				<action id="aXTR-EMIR-CONF-LG" package="MX::Action::ExecuteCmd"> 
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-EMIR-CONF-LG"/>
+				</action>
+
+				<action id="aXTR_IRD_MTM " package="MX::Action::ExecuteCmd"> 
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-IRD-MTM"/>
+				</action>	 
+
+				<action id="aXTR_SASKPWR" package="MX::Action::ExecuteCmd"> 
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-SASKPWR"/>
+				</action>	
+
+				<action id="aXTR_BO_LEGAL" package="MX::Action::ExecuteCmd"> 
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-BO-LEGAL"/>
+				</action>	
+
+				<action id="aXTR_INSTR_MKT" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-INSTR-MKT"/>
+				</action>
+
+				<action id="aXTR_MKTFXFUT" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-MKTFXFUT"/>
+				</action>
+
+				<action id="aXTR_MKT_CRV" package="MX::Action::ExecuteCmd">
+					<!-- MCI -->		
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-MKT-CRV-COM"/>
+				</action>
+
+				<action id="aXTC_CPTY" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTC-CPTY"/>
+				</action>
+
+			</state>
+
+
+			<state id="sEXTRACT8" mode="sequence">
+
+				<action id="aXTR_RISK_WWR" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="sleep 40;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-RISK-WWR"/>
+				</action>
+				<action id="aXTR_RISK_WWR-V" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-RISK-WWR-V"/>
+				</action>		
+			</state>
+
+
+			<state id="sEXTRACT9" mode="sequence">
+
+				<action id="aXTC_FOOPT71" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="sleep 45;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTC-FOOPT71"/>
+				</action>
+
+				<action id="aXTC_MONET" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTC-MONET"/>
+				</action>
+
+				<action id="aXTC_FPOS1_2" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTC-FPOS1_2"/>
+				</action>
+
+				<action id="aXTC_FEDR1" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTC-FEDR1"/>
+				</action>
+
+				<action id="aXTC_NCD" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTC-NCD"/>
+				</action>
+
+				<action id="aXTC_GED01" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BXTC-GED01"/>
+				</action>
+
+				<action id="aXTC_CSLB" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BXTC-CSLB"/>
+				</action>
+
+				<action id="aXTR_PCUR_SWP" package="MX::Action::ExecuteCmd"> 
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-PCUR-SWP"/>
+				</action>	
+
+				<action id="aXTC_IRDVAL" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-IRDVAL &amp;"/>
+				</action>
+
+				<action id="aXTC_COMVAL" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-COMVAL &amp;"/>
+				</action>
+
+				<action id="aXTC_EQUVAL" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-EQUVAL &amp;"/>
+				</action>
+
+				<action id="aXTC_CURRVAL" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-CURRVAL &amp;"/>
+				</action>
+
+				<action id="aXTC_CURRVAL_NBCN" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-CURRVAL-NBCN &amp;"/>
+				</action>
+
+				<action id="aXTC_OTCCTRLREP" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-OTCCTRLREP"/>
+				</action>
+
+				<action id="aXTR_IRDVALNBF" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-IRDVALNBF &amp;"/>
+				</action>
+
+				<action id="aXTR_COMVALNBF" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-COMVALNBF &amp;"/>
+				</action>
+
+				<action id="aXTR_EQUVALNBF" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-EQUVALNBF &amp;"/>
+				</action>
+
+				<action id="aXTR_CURRVALNBF" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-CURRVALNBF &amp;"/>
+				</action>
+
+				<action id="aXTR_MARKETERS" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-MARKETERS &amp;"/>
+				</action>
+
+				<action id="aXTR_PBOTC" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-PBOTC"/>
+				</action>
+
+			</state>
+
+
+			<state id="sEXTRACT10" mode="sequence">
+
+				<action id="aXTR_OPS_MTM_DT" package="MX::Action::ExecuteCmd">
+					<!-- MCI -->
+					<param name="cmd" value="sleep 50;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-OPS-MTM-DT"/>
+				</action>
+
+				<action id="aXTC_FXOPTSTRA" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-FXOPTSTRA"/>
+				</action>
+
+				<action id="aXTR_CMB_CHT" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-CMB-CHT"/>
+				</action>
+
+				<action id="aXTR-BO-PMTS491" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-BO-PMTS491"/>
+				</action>
+
+				<action id="aXTR_CREDFX_TXN" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-CREDFX-TXN"/>
+				</action>
+
+				<action id="aXTR_CREDLNBRTXN" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-CREDLNBRTXN"/>
+				</action>
+
+				<action id="aXTR_OSSREPO" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-OSSREPO"/>
+				</action>
+
+				<action id="aXTR_CS179" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-CS179"/>
+				</action>
+
+				<action id="aXTR-CREDSCF-TRN" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-CREDSCF-TRN"/>
+				</action>
+
+				<action id="aXTR-LK-COMSWAP" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-LK-COMSWAP"/>
+				</action>
+
+				<action id="aXTR-FO-SSF-POS" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTC-FO-SSF-POS"/>
+				</action>
+
+				<action id="aXTR-FO-SSF-TRD" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTC-FO-SSF-TRD"/>
+				</action>
+				<action id="aXTR-MKT-CPTY" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-MKT-CPTY"/>
+				</action>				
+
+				<action id="aXTR_VEGA-GEDMTL" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-EQDVAR-VEGA-GEDMTL"/>
+				</action>
+
+				<action id="aXTR_MOS_MTM" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-MOS-MTM"/>
+				</action>
+
+				<action id="aXTR_MOS_MTM_BO" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-MOS-MTM-BO"/>
+				</action>
+
+				<action id="aXTR_EXTC_FIX" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-EXTC-FIX"/>
+				</action>
+
+				<action id="aXTR_IG83" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-IG83"/>
+				</action>
+
+				<action id="aXTR-COMSWAP-SCH " package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-COMSWAP-SCH"/>
+				</action>
+			</state>
+
+			<state id="sEXTRACT11" mode="sequence">
+
+				<action id="aXTR_FO_CF" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="sleep 55;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-FO-CF"/>
+				</action>
+
+				<action id="aXTR_FO_CF_V" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-FO-CF-V"/>
+				</action>
+			</state>
+
+			<state id="sEXTRACT12" mode="sequence">
+
+				<action id="aXTR_FO_MV" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="sleep 60;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-FO-MV"/>
+				</action>
+
+				<action id="aXTR_FO_PL" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-FO-PL"/>
+				</action>
+
+				<action id="aXTR_FO_PLWH1" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-FO-PLWH1"/>
+				</action>
+
+				<action id="aXTR_FO_PLWH1_V" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-FO-PLWH1-V"/>
+				</action>
+
+				<action id="aXTR_FO_PLWH2" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-FO-PLWH2"/>
+				</action>
+
+				<action id="aXTR_FO_PLWH2_V" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-FO-PLWH2-V"/>
+				</action>
+
+				<action id="aXTR_FO_SV1" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-FO-SV1"/>
+				</action>
+
+			</state>
+
+			<state id="sEXTRACT13" mode="sequence">
+
+				<action id="aXTR_FO_SV2" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="sleep 65;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-FO-SV2"/>
+				</action>
+
+				<action id="aXTR_FO_SVPL1" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-FO-SVPL1"/>
+				</action>
+
+				<action id="aXTR_FO_SVPL2" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-FO-SVPL2"/>
+				</action>
+
+				<action id="aXTR_FO_TRNWH" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-FO-TRNWH"/>
+				</action>
+
+				<action id="aXTR_FO_TRNWH_V" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-FO-TRNWH-V"/>
+				</action>
+
+				<action id="aXTR_FO_WWR" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-FO-WWR"/>
+				</action>
+
+				<action id="aXTR_FO_WWR_V" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-FO-WWR-V"/>
+				</action>
+
+			</state>
+
+			<state id="sEXTRACT14" mode="sequence">
+				<action id="aXTR_RECGICM" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="sleep 70;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-RECGICM"/>
+				</action>
+
+				<action id="aXTC_CTPMX" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTC-CTPMX"/>
+				</action>
+
+				<action id="aXTC_DTCCCTRL" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTC-DTCCCTRL"/>
+				</action>
+
+				<action id="aXTR_XTR_SATRLD_OLD" package="MX::Action::ExecuteCmd"> 
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-SATRLD-OLD"/>
+				</action>
+
+				<action id="aXTR_XTR_FUTCSD_OLD" package="MX::Action::ExecuteCmd"> 
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-FUTCSD-OLD"/>
+				</action>
+
+				<action id="aXTR_XTR_FUTCSM_OLD" package="MX::Action::ExecuteCmd"> 
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-FUTCSM-OLD"/>
+				</action>
+
+				<action id="aXTR_XTR_SATPRD_OLD" package="MX::Action::ExecuteCmd"> 
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-SATPRD-OLD"/>
+				</action>
+
+				<action id="aXTR_XTR_SATPRM_OLD" package="MX::Action::ExecuteCmd"> 
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-SATPRM-OLD"/>
+				</action>
+
+				<action id="aXTR_XTR_SATRLM_OLD" package="MX::Action::ExecuteCmd"> 
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-SATRLM-OLD"/>
+				</action>
+
+			</state>
+
+			<state id="sEXTRACT15" mode="sequence">
+				<action id="aXTR_XTR_SAT_REAL_M" package="MX::Action::ExecuteCmd"> 
+					<param name="cmd" value="sleep 75;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-SAT-REAL-M"/>
+				</action>
+
+				<action id="aXTR_XTR_SAT_REAL_EXC_D" package="MX::Action::ExecuteCmd"> 
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-SAT-REAL-EXC-D"/>
+				</action>	
+
+				<action id="aXTR_XTR_SAT_REAL_EXC_M" package="MX::Action::ExecuteCmd"> 
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-SAT-REAL-EXC-M"/>
+				</action>
+
+				<action id="aXTR_XTR_LCHCPTY_D" package="MX::Action::ExecuteCmd"> 
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-LCHCPTY-D"/>
+				</action>	
+
+				<action id="aXTR_XTR_LCHCPTY_M" package="MX::Action::ExecuteCmd"> 
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-LCHCPTY-M"/>
+				</action>
+
+				<action id="aXTR_XTR_FUTCS_D" package="MX::Action::ExecuteCmd"> 
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-FUTCS-D"/>
+				</action>	
+
+				<action id="aXTR_XTR_FUTCS_M" package="MX::Action::ExecuteCmd"> 
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-FUTCS-M"/>
+				</action>	
+
+				<action id="aXTR_XTR_M_LNBCD_D" package="MX::Action::ExecuteCmd"> 
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-M-LNBCD-D"/>
+				</action>	
+
+				<action id="aXTR_XTR_M_LNBCD_M" package="MX::Action::ExecuteCmd"> 
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-M-LNBCD-M"/>
+				</action>
+
+				<action id="aXTR_XTR_M_REPO_D" package="MX::Action::ExecuteCmd"> 
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-M-REPO-D"/>
+				</action>
+
+				<action id="aXTR_XTR_M_REPO_M" package="MX::Action::ExecuteCmd"> 
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-M-REPO-M"/>
+				</action>	
+
+				<action id="aXTR_XTR_SAT_PREM_D" package="MX::Action::ExecuteCmd"> 
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-SAT-PREM-D"/>
+				</action>
+
+				<action id="aXTR_XTR_SAT_PREM_M" package="MX::Action::ExecuteCmd"> 
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-SAT-PREM-M"/>
+				</action>
+
+				<action id="aXTR_FIXING_RISK" package="MX::Action::ExecuteCmd"> 
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-FIXING-RISK"/>
+				</action>	
+			</state>
+
+			<state id="sEXTRACT16" mode="sequence">
+				<action id="aXTR_INSTR_KVAR" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="sleep 80;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-INSTR-KVAR"/>
+				</action>
+				<action id="aXTR_EQSVAR" package="MX::Action::ExecuteCmd"> 
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-EQSVAR"/>
+				</action>	 
+
+				<action id="aXTR_BBG" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-BBG "/>
+				</action>
+
+				<action id="aDEL_DIV_BEFORE" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/RPT/IT/DeletedDivided.pl"/>
+				</action>
+
+				<action id="aSP_MUL_CUR_BSK_DIV" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY -d $DBBASE -s 'exec MUREXDB.sp_MUL_CUR_BSK_DIV_AFTER'"/>
+				</action>
+
+				<action id="aDEL_DIV_AFTER" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/RPT/IT/DeletedDivided.pl"/>
+				</action>
+			</state>
+
+			<state id="sEXTRACT17" mode="sequence">
+				<action id="aXTR_FO_CSWH" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="sleep 85;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-FO-CSWH"/>
+				</action>
+
+				<action id="aXTR_FO_CSWH_V" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-FO-CSWH-V"/>
+				</action>
+
+				<action id="aXTR_FO_GREEKS" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-FO-GREEKS"/>
+				</action>
+
+				<action id="aXTR_FO_LBEVT" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-FO-LBEVT"/>
+				</action>
+
+				<action id="aXTR_FO_MRCOM_GRK" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-FO-MRCOM-GRK"/>
+				</action>
+
+				<action id="aXTC_BONDPAY" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTC-BONDPAY"/>
+				</action>
+
+				<action id="aXTR_MFD2_LD_FX" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-MFD2-LD-FX"/>
+				</action>
+
+				<action id="aXTR_MFD2_LD_IR" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-MFD2-LD-IR"/>
+				</action>
+
+				<action id="aXTR_MFD2_LD_CS" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-MFD2-LD-CS"/>
+				</action>
+
+				<action id="aXTR_MFD2_LD_BD" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-MFD2-LD-BD"/>
+				</action>
+
+				<action id="aXTR_MFD2_LD_EQUIT" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-MFD2-EQUIT"/>
+				</action>
+
+				<action id="aXTR_MFD2_LD_EQS" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-MFD2-EQS"/>
+				</action>
+				<action id="aXTR_CANDEAL" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-CANDEAL"/>
+				</action>
+
+			</state>
+
+			<state id="sEXTRACT_ACU_RECON1" mode="sequence">
+				<action id="aXTR_RC211_FX" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="sleep 90;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-RC211-FX"/>
+				</action>
+				<action id="aXTR_RC211_LST" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-RC211-LST"/>
+				</action>
+			</state>
+
+			<state id="sEXTRACT_ACU_RECON2" mode="sequence">
+				<action id="aXTR_RC211_IRD" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="sleep 95;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-RC211-IRD"/>
+				</action>
+				<action id="aXTR_VAR_RC211" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-VAR-RC211"/>
+				</action>
+				<action id="aXTR_VAR_MVT211" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-VAR-MVT211"/>
+				</action>
+			</state>
+
+			<state id="sEXTRACT_VAR" mode="sequence">
+				<action id="aXTR_VAR_CEGA" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="sleep 100;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-PS-BXTR-TAYLOR-CEGA"/>
+				</action>
+				<action id="aXTR_VAR_COM" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-PS-BXTR-TAYLOR-COM"/>
+				</action>
+				<action id="aXTR_VAR_CRD" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-PS-BXTR-TAYLOR-CRD"/>
+				</action>
+				<action id="aXTR_VAR_FX" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-PS-BXTR-TAYLOR-FX"/>
+				</action>
+				<action id="aXTR_VAR_IRD" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-PS-BXTR-TAYLOR-IRD"/>
+				</action>
+				<action id="aXTR_VAR_MV" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-PS-BXTR-TAYLOR-MV"/>
+				</action>
+			</state>	
+
+			<state id="sDM_TRUNCATE_TABLES" mode="parallel">
+				<action id="aDM_TRUNCATE_DEAL_PCK" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY -d $DBBASE -s 'exec MUREXDB.sp_DM_TRUNCATE_DEAL_PCK 'Y''"/>
+				</action>
+
+				<action id="aDM_TRUNCATE_DM_COM" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_VAR -d $DBBASE_VAR -u $DBADMINRI_VAR -p $DBADMINRI_VARPASS -s 'exec sp_DM_TRUNCATE_DM_COM 'Y''"/>
+				</action>
+			</state>
+		</state>
+
+		<state id="sWORKFLOW_RESET" mode="parallel">
+			<action id="aODS_RESET_DATE" package="MX::Action::ExecuteCmd">
+				<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_RESET_DATE'"/>
+			</action>
+		</state>
+
+		<state id="sMARKER_END" mode="sequence">
+			<action id="aMARKER_END" package="MX::Action::ExecuteCmd">
+				<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-WF-EOD-EXTRACT-DAILY-END"/>
+			</action>
+		</state>
+
+		<state id="sEMAIL_END" mode="parallel">
+			<action id="aEMAIL_END" package="MX::Action::ExecuteCmd">
+				<param name="cmd" value="cat /dev/null | mailx -s'DATAMART - EOD EXTRACTS - Done' $DATAMART_MAILTO"/>
+			</action>
+
+			<action id="aNAGIOS_STOP" package="MX::Action::ExecuteCmd">
+				<param name="cmd" value="$MXBIN/TOOLS/NAGIOS/nagios_msg.sh I 'DATAMART - EOD EXTRACTS DAILY' wf_eod_extract_daily.xml 00"/>
+			</action>
+		</state>
 
 	</state>
-
-
-	<state id="sEXTRACT2" mode="sequence">
-
-		<action id="aXTR_CTP" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="sleep 10;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-CTP"></param>
-		</action>
-
-		<action id="aXTR_INSTR" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-INSTR"></param>
-		</action>
-
-		<action id="aXTR_INSTR_BD" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-INSTR-BD"></param>
-		</action>
-
-		<action id="aXTR_INSTR_BDC" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-INSTR-BDC"></param>
-		</action>
-
-		<action id="aXTR_INSTR_BDCC" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-INSTR-BDCC"></param>
-		</action>
-
-		<action id="aXTR_INSTR_BDS" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-INSTR-BDS"></param>
-		</action>
-
-		<action id="aXTR_INSTR_EQ" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-INSTR-EQ"></param>
-		</action>
-
-		<action id="aXTR_INSTR_VAL" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-INSTR-VAL"></param>
-		</action>
-
-		<action id="aXTR_MKTPRC_BND" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-MKTPRC-BND"></param>
-		</action>
-
-		<action id="aXTR_MKTPRC_EQD" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-MKTPRC-EQD"></param>
-		</action>
-
-		<action id="aXTR_MKTSPOT" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-MKTSPOT"></param>
-		</action>
-
-		<action id="aXTR_MKTSPOTEOM" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-MKTSPOTEOM"></param>
-		</action>
-
-		<action id="aXTR_PTF" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-PTF"></param>
-		</action>
-		
-		<action id="aXTR_XTI_EQDLB" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-XTI-EQDLB"></param>
-		</action>	
-		
-		<action id="aXTR_XTI_EQDLBGA" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-XTI-EQDLBGA"></param>
-		</action>
-
-		<action id="aXTR_EQDVOL" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-EQDVOL"></param>
-		</action>
-
-		<action id="aXTC_FOCS8" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTC-FOCS8"></param>
-		</action>
-		
-		<action id="aXTR-DT179" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-DT179"></param>
-		</action>	
-
-		<action id="aXTR_VIPFXCTRL" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-VIPFXCTRL"></param>
-		</action>
-
-		<action id="aXTR_OPS_NDF" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-OPS-NDF"></param>
-		</action>
-
-		<action id="aXTR_RATCHET" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-RATCHET"></param>
-		</action>
-
-	</state>		
-
-
-	<state id="sEXTRACT3" mode="sequence">
-
-		<action id="aXTR_RCEQDCOM" package="MX::Action::ExecuteCmd"> <!-- MCI -->
-			<param name="cmd" value="sleep 15;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-RCCOM"></param>
-		</action>
-	
-		<action id="aXTR_RCCOM_P" package="MX::Action::ExecuteCmd"> <!-- MCI -->
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-RCCOM-P"></param>
-		</action>
-		
-		<action id="aXTR_RCEQD" package="MX::Action::ExecuteCmd"> <!-- MCI -->
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-RCEQD"></param>
-		</action>
-		
-		<action id="aXTR_RCEQD_P" package="MX::Action::ExecuteCmd"> <!-- MCI -->
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-RCEQD-P"></param>
-		</action>
-		
-                <action id="aXTR_RCDIV" package="MX::Action::ExecuteCmd">
-                        <param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-RCDIV"></param>
-                </action>
-				
-		<action id="aXTR_TXN" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-TXN &amp;"></param>
-		</action>
-
-                <action id="aXTR_OTCCLR" package="MX::Action::ExecuteCmd">
-                        <param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-OTCCLR"></param>
-                </action>
-
-                <action id="aXTR_OTCCLCS" package="MX::Action::ExecuteCmd">
-                        <param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-OTCCLCS"></param>
-                </action>
-
-                <action id="aXTR_OTCICCS" package="MX::Action::ExecuteCmd">
-                        <param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-OTCICCS"></param>
-                </action>
-
-                <action id="aXTR_OTCDLCH" package="MX::Action::ExecuteCmd">
-                        <param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-OTCDLCH"></param>
-                </action>
-
-                <action id="aXTR_OTCCLDU" package="MX::Action::ExecuteCmd">
-                        <param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-OTCCLDU"></param>
-                </action>
-
-                <action id="aXTR_RCOC" package="MX::Action::ExecuteCmd">
-                        <param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-RCOC"></param>
-                </action>
-
-                <action id="aXTR_POS" package="MX::Action::ExecuteCmd">
-                        <param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-POS"></param>
-                </action>
-				
-                <action id="aXTR_POS606" package="MX::Action::ExecuteCmd">
-                        <param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTC-POS606"></param>
-                </action>
-
-                <action id="aXTR_POSGA" package="MX::Action::ExecuteCmd">
-                        <param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-POSGA"></param>
-                </action>
-
-                <action id="aXTR_REPO" package="MX::Action::ExecuteCmd">
-                        <param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-REPO"></param>
-                </action>
-
-                <action id="aXTC_RLCHCS" package="MX::Action::ExecuteCmd">
-                        <param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTC-RLCHCS"></param>
-                </action>
-
-                <action id="aXTC_RLCHTR" package="MX::Action::ExecuteCmd">
-                        <param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTC-RLCHTR"></param>
-                </action>
-
-                <action id="aXTR_RCOCFXI" package="MX::Action::ExecuteCmd">
-                        <param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-RCOCFXI"></param>
-                </action>
-                
-                <action id="aXTR_POS_PIN" package="MX::Action::ExecuteCmd"> 
-                         <param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-POS-PIN"></param>
-	        </action>	
-
-	        <action id="aXTR_POS_OTC" package="MX::Action::ExecuteCmd"> 
-                         <param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-POS-OTC"></param>
-	        </action>	
-		                
-	</state>
-
-
-	<state id="sEXTRACT4" mode="sequence">
-
-		<action id="aXTR_INSTR_FX" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="sleep 20;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-INSTR-FX"></param>
-		</action>
-
-		<action id="aXTR_MATURITY" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-MATURITY"></param>
-		</action>
-
-		<action id="aXTR_OPT_CNTR" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-OPT-CNTR"></param>
-		</action>
-	
-		<action id="aXTR_DAILY_V" package="MX::Action::ExecuteCmd"> <!-- MCI -->
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-COMDAILY-V"></param>
-		</action>
-
-		<action id="aXTR_LST_THEO" package="MX::Action::ExecuteCmd"> <!-- MCI -->
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-COMLST-THEO"></param>
-		</action>
-
-		<action id="aXTR_COMSWAP_PHY" package="MX::Action::ExecuteCmd"> <!-- MCI -->
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-COMSWAP-PHY"></param>
-		</action>
-
-		<action id="aXTR_COMSWAP_PRC" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-COMSWAP-PRC"></param>
-		</action>
-
-		<action id="aXTR_MO_COMPL" package="MX::Action::ExecuteCmd"> <!-- MCI -->
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-MO-COMPL"></param>
-		</action>
-
-		<action id="aXTR_MO_ICE_NMX" package="MX::Action::ExecuteCmd"> <!-- MCI -->
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-MO-ICE-NMX"></param>
-		</action>
-
-		<action id="aXTR_MO_INTL" package="MX::Action::ExecuteCmd"> <!-- MCI -->
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-MO-INTL"></param>
-		</action>
-
-		<action id="aXTR_MO_POS" package="MX::Action::ExecuteCmd"> <!-- MCI -->
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-MO-POS"></param>
-		</action>
-
-		<action id="aXTR_MO_PX" package="MX::Action::ExecuteCmd"> <!-- MCI -->
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-MO-PX"></param>
-		</action>
-
-		<action id="aXTR_MO_EQD" package="MX::Action::ExecuteCmd"> <!-- MCI -->
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-MO-EQD"></param>
-		</action>
-
-		<action id="aXTR_MO_COM" package="MX::Action::ExecuteCmd"> <!-- MCI -->
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-MO-COM"></param>
-		</action>
-
-		<action id="aXTR_MO_GRK" package="MX::Action::ExecuteCmd"> <!-- MCI -->
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-MO-GRK"></param>
-		</action>
-
-		<action id="aXTR_MO_MV" package="MX::Action::ExecuteCmd"> <!-- MCI -->
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-MO-MV"></param>
-		</action>
-		
- 		<action id="aXTR_COMEQD_NB" package="MX::Action::ExecuteCmd"> <!-- MCI -->
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-COMEQD-NB"></param>
-		</action>		
-
-		<action id="aXTR_MKTPRC_MBS" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-MKTPRC-MBS"></param>
-		</action>
-		
-	</state>
-
-
-	<state id="sEXTRACT5" mode="sequence">
-	
-		<action id="aXTR_SATACRD" package="MX::Action::ExecuteCmd"> 
-			<param name="cmd" value="sleep 25;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-SATACRD"></param>
-		</action>
-
-		<action id="aXTR_SATACRM" package="MX::Action::ExecuteCmd"> 
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-SATACRM"></param>
-		</action>
-		
-		<action id="aXTR_PL_PANDL" package="MX::Action::ExecuteCmd"> 
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-PL-PANDL"></param>
-		</action>		
-		
-		<action id="aXTR_PL_SWAPS" package="MX::Action::ExecuteCmd"> 
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-PL-SWAPS"></param>
-		</action>
-		
-		<action id="aXTR_PL_PANDL_DAILY" package="MX::Action::ExecuteCmd"> 
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-PL-PANDL-DAILY "></param>
-		</action>		
-		
-		<action id="aXTR_PL_SWAPS_DAILY" package="MX::Action::ExecuteCmd"> 
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-PL-SWAPS-DAILY"></param>
-		</action>	
-		
-		<action id="aXTR_PL_PANDL_EXC_DAILY" package="MX::Action::ExecuteCmd"> 
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-PL-PANDL-EXC-DAILY"></param>
-		</action>	
-		
-		<action id="aXTR_PL_PANDL_EXC_MONTHLY" package="MX::Action::ExecuteCmd"> 
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-PL-PANDL-EXC-MONTHLY"></param>
-		</action>	
-		
-		<action id="aXTR_XTR_SAT_REAL_D" package="MX::Action::ExecuteCmd"> 
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-SAT-REAL-D"></param>
-		</action>	
-		
-	</state>
-
-
-	<state id="sEXTRACT6" mode="sequence">
-
-	        <action id="aXTR_COMVAR_CGA" package="MX::Action::ExecuteCmd">
-                        <param name="cmd" value="sleep 30;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-COMVAR-CGA &amp;"></param>
-        	</action>
-
-                <action id="aXTR_FIMTL_PL2" package="MX::Action::ExecuteCmd">
-                        <param name="cmd" value="sleep 38;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-FIMTL-PL2"></param>
-                </action>
-
-                <action id="aXTR_ALM_PL2" package="MX::Action::ExecuteCmd">
-                        <param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-ALM-PL2"></param>
-                </action>
-
-                <action id="aXTR_EQDMO_PL2" package="MX::Action::ExecuteCmd">
-                        <param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-EQDMO-PL2"></param>
-                </action>
-
-                <action id="aXTR_EXT_PL2" package="MX::Action::ExecuteCmd">
-                        <param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-EXT-PL2"></param>
-                </action>
-
-                <action id="aXTR_FEN_PL2" package="MX::Action::ExecuteCmd">
-                        <param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-FEN-PL2"></param>
-                </action>
-
-                <action id="aXTR_FXMO_PL2" package="MX::Action::ExecuteCmd">
-                        <param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-FXMO-PL2"></param>
-                </action>
-
-                <action id="aXTR_TOR_PL2" package="MX::Action::ExecuteCmd">
-                        <param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-TOR-PL2"></param>
-                </action>
-
-                <action id="aXTR_BDFWD" package="MX::Action::ExecuteCmd">
-                        <param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-BDFWD"></param>
-                </action>
-
-		<action id="aXTC_CRECNTP" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTC-CRECNTP"></param>
-		</action>
-
-		<action id="aXTC_CREPFLS" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTC-CREPFLS"></param>
-		</action>
-		
-		<action id="aXTR_COMVAR_CGA2" package="MX::Action::ExecuteCmd">
-                        <param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-COMVAR-CGA2"></param>
-        	</action>
-
-	</state>
-
-
-	<state id="sEXTRACT7" mode="sequence">
-
-		<action id="aXTR_COMVAR_10P" package="MX::Action::ExecuteCmd">  <!-- MCI -->
-			<param name="cmd" value="sleep 35;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-COMVAR-10P"></param>
-		</action>
-
-		<action id="aXTR_COMVAR_GAS" package="MX::Action::ExecuteCmd">  <!-- MCI -->
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-COMVAR-GAS"></param>
-		</action>
-		
-		<action id="aXTR_COMVAR_OIL" package="MX::Action::ExecuteCmd">  <!-- MCI -->
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-COMVAR-OIL"></param>
-		</action>
-
-		<action id="aXTR_OPS_MTM" package="MX::Action::ExecuteCmd"> <!-- MCI -->
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-OPS-MTM"></param>
-		</action>
-
-		<action id="aXTR-OPS-STORAGE" package="MX::Action::ExecuteCmd"> <!-- MCI -->
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-OPS-STORAGE"></param>
-		</action>
-
-		<action id="aXTI-CFE" package="MX::Action::ExecuteCmd"> <!-- MCI -->
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTI-CFE"></param>
-		</action>
-
-		<action id="aXTR-BO-PMTS10" package="MX::Action::ExecuteCmd"> <!-- MCI -->
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-BO-PMTS10"></param>
-		</action>
-
-		<action id="aXTR-CASHV" package="MX::Action::ExecuteCmd"> <!-- MCI -->
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-CASHV"></param>
-		</action>
-
-		<action id="aXTR-EQTFIX" package="MX::Action::ExecuteCmd"> 
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-EQTFIX"></param>
-		</action>
-
-		<action id="aXTR-EQTEXP" package="MX::Action::ExecuteCmd"> 
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-EQTEXP"></param>
-		</action>
-
-		<action id="aXTR-GTRVAL" package="MX::Action::ExecuteCmd"> 
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-GTR-VAL"></param>
-		</action>			
-
-		<action id="aXTR-EMIR-CONF-LG" package="MX::Action::ExecuteCmd"> 
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-EMIR-CONF-LG"></param>
-		</action>
-
-		<action id="aXTR_IRD_MTM " package="MX::Action::ExecuteCmd"> 
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-IRD-MTM"></param>
-		</action>	 
-
-		<action id="aXTR_SASKPWR" package="MX::Action::ExecuteCmd"> 
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-SASKPWR"></param>
-		</action>	
-
-		<action id="aXTR_BO_LEGAL" package="MX::Action::ExecuteCmd"> 
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-BO-LEGAL"></param>
-		</action>	
-
-		<action id="aXTR_INSTR_MKT" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-INSTR-MKT"></param>
-		</action>
-
-		<action id="aXTR_MKTFXFUT" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-MKTFXFUT"></param>
-		</action>
-				
-		<action id="aXTR_MKT_CRV" package="MX::Action::ExecuteCmd"> <!-- MCI -->		
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-MKT-CRV-COM"></param>
-		</action>
-
-		<action id="aXTC_CPTY" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTC-CPTY"></param>
-		</action>
-                       
-	</state>
-
-
-	<state id="sEXTRACT8" mode="sequence">
-
-		<action id="aXTR_RISK_WWR" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="sleep 40;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-RISK-WWR"></param>
-		</action>
-		<action id="aXTR_RISK_WWR-V" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-RISK-WWR-V"></param>
-		</action>		
-	</state>
-
-
-	<state id="sEXTRACT9" mode="sequence">
-
-                <action id="aXTC_FOOPT71" package="MX::Action::ExecuteCmd">
-                        <param name="cmd" value="sleep 45;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTC-FOOPT71"></param>
-                </action>
-
-                <action id="aXTC_MONET" package="MX::Action::ExecuteCmd">
-                        <param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTC-MONET"></param>
-                </action>
-
-                <action id="aXTC_FPOS1_2" package="MX::Action::ExecuteCmd">
-                        <param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTC-FPOS1_2"></param>
-                </action>
-
-                <action id="aXTC_FEDR1" package="MX::Action::ExecuteCmd">
-                        <param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTC-FEDR1"></param>
-                </action>
-
-                <action id="aXTC_NCD" package="MX::Action::ExecuteCmd">
-                        <param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTC-NCD"></param>
-                </action>
-                
-                <action id="aXTC_GED01" package="MX::Action::ExecuteCmd">
-                        <param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BXTC-GED01"></param>
-                </action>
-
-                <action id="aXTC_CSLB" package="MX::Action::ExecuteCmd">
-                        <param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BXTC-CSLB"></param>
-                </action>
-
-		<action id="aXTR_PCUR_SWP" package="MX::Action::ExecuteCmd"> 
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-PCUR-SWP"></param>
-		</action>	
-
-                <action id="aXTC_IRDVAL" package="MX::Action::ExecuteCmd">
-                        <param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-IRDVAL &amp;"></param>
-                </action>
-
-                <action id="aXTC_COMVAL" package="MX::Action::ExecuteCmd">
-                        <param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-COMVAL &amp;"></param>
-                </action>
-
-                <action id="aXTC_EQUVAL" package="MX::Action::ExecuteCmd">
-                        <param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-EQUVAL &amp;"></param>
-                </action>
-
-                <action id="aXTC_CURRVAL" package="MX::Action::ExecuteCmd">
-                        <param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-CURRVAL &amp;"></param>
-                </action>
-
-                <action id="aXTC_CURRVAL_NBCN" package="MX::Action::ExecuteCmd">
-                        <param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-CURRVAL-NBCN &amp;"></param>
-                </action>
-
-                <action id="aXTC_OTCCTRLREP" package="MX::Action::ExecuteCmd">
-                        <param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-OTCCTRLREP"></param>
-                </action>
-
-                <action id="aXTR_IRDVALNBF" package="MX::Action::ExecuteCmd">
-                        <param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-IRDVALNBF &amp;"></param>
-                </action>
-
-                <action id="aXTR_COMVALNBF" package="MX::Action::ExecuteCmd">
-                        <param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-COMVALNBF &amp;"></param>
-                </action>
-
-                <action id="aXTR_EQUVALNBF" package="MX::Action::ExecuteCmd">
-                        <param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-EQUVALNBF &amp;"></param>
-                </action>
-
-                <action id="aXTR_CURRVALNBF" package="MX::Action::ExecuteCmd">
-                        <param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-CURRVALNBF &amp;"></param>
-                </action>
-                
-                <action id="aXTR_MARKETERS" package="MX::Action::ExecuteCmd">
-                        <param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-MARKETERS &amp;"></param>
-                </action>
-
-		<action id="aXTR_PBOTC" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-PBOTC"></param>
-		</action>
-
-	</state>
-
-
-	<state id="sEXTRACT10" mode="sequence">
-
-		<action id="aXTR_OPS_MTM_DT" package="MX::Action::ExecuteCmd"> <!-- MCI -->
-			<param name="cmd" value="sleep 50;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-OPS-MTM-DT"></param>
-		</action>
-
-                <action id="aXTC_FXOPTSTRA" package="MX::Action::ExecuteCmd">
-                        <param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-FXOPTSTRA"></param>
-                </action>
-
-		<action id="aXTR_CMB_CHT" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-CMB-CHT"></param>
-		</action>
-
-		<action id="aXTR-BO-PMTS491" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-BO-PMTS491"></param>
-		</action>
-
-		<action id="aXTR_CREDFX_TXN" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-CREDFX-TXN"></param>
-		</action>
-
-		<action id="aXTR_CREDLNBRTXN" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-CREDLNBRTXN"></param>
-		</action>
-		
-		<action id="aXTR_OSSREPO" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-OSSREPO"></param>
-		</action>
-
-		<action id="aXTR_CS179" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-CS179"></param>
-		</action>
-		
-		<action id="aXTR-CREDSCF-TRN" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-CREDSCF-TRN"></param>
-		</action>
-		
-		<action id="aXTR-LK-COMSWAP" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-LK-COMSWAP"></param>
-		</action>
-		
-		<action id="aXTR-FO-SSF-POS" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTC-FO-SSF-POS"></param>
-		</action>
-
-		<action id="aXTR-FO-SSF-TRD" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTC-FO-SSF-TRD"></param>
-		</action>
-		<action id="aXTR-MKT-CPTY" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-MKT-CPTY"></param>
-		</action>				
-		
-		<action id="aXTR_VEGA-GEDMTL" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-EQDVAR-VEGA-GEDMTL"></param>
-		</action>
-		
-		<action id="aXTR_MOS_MTM" package="MX::Action::ExecuteCmd">
-                        <param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-MOS-MTM"></param>
-        	</action>
-
-		<action id="aXTR_MOS_MTM_BO" package="MX::Action::ExecuteCmd">
-                        <param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-MOS-MTM-BO"></param>
-        	</action>
-		
-		<action id="aXTR_EXTC_FIX" package="MX::Action::ExecuteCmd">
-            		<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-EXTC-FIX"></param>
-        	</action>
-
-		<action id="aXTR_IG83" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-IG83"></param>
-		</action>
-		
-		<action id="aXTR-COMSWAP-SCH " package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-COMSWAP-SCH"></param>
-		</action>
-	</state>
-
-	<state id="sEXTRACT11" mode="sequence">
-
-                <action id="aXTR_FO_CF" package="MX::Action::ExecuteCmd">
-                        <param name="cmd" value="sleep 55;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-FO-CF"></param>
-                </action>
-
-                <action id="aXTR_FO_CF_V" package="MX::Action::ExecuteCmd">
-                        <param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-FO-CF-V"></param>
-                </action>
-	</state>
-
-	<state id="sEXTRACT12" mode="sequence">
-
-                <action id="aXTR_FO_MV" package="MX::Action::ExecuteCmd">
-                        <param name="cmd" value="sleep 60;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-FO-MV"></param>
-                </action>
-
-                <action id="aXTR_FO_PL" package="MX::Action::ExecuteCmd">
-                        <param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-FO-PL"></param>
-                </action>
-
-                <action id="aXTR_FO_PLWH1" package="MX::Action::ExecuteCmd">
-                        <param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-FO-PLWH1"></param>
-                </action>
-
-                <action id="aXTR_FO_PLWH1_V" package="MX::Action::ExecuteCmd">
-                        <param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-FO-PLWH1-V"></param>
-                </action>
-
-                <action id="aXTR_FO_PLWH2" package="MX::Action::ExecuteCmd">
-                        <param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-FO-PLWH2"></param>
-                </action>
-
-                <action id="aXTR_FO_PLWH2_V" package="MX::Action::ExecuteCmd">
-                        <param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-FO-PLWH2-V"></param>
-                </action>
-
-                <action id="aXTR_FO_SV1" package="MX::Action::ExecuteCmd">
-                        <param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-FO-SV1"></param>
-                </action>
-
-	</state>
-
-	<state id="sEXTRACT13" mode="sequence">
-
-                <action id="aXTR_FO_SV2" package="MX::Action::ExecuteCmd">
-                        <param name="cmd" value="sleep 65;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-FO-SV2"></param>
-                </action>
-
-                <action id="aXTR_FO_SVPL1" package="MX::Action::ExecuteCmd">
-                        <param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-FO-SVPL1"></param>
-                </action>
-
-                <action id="aXTR_FO_SVPL2" package="MX::Action::ExecuteCmd">
-                        <param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-FO-SVPL2"></param>
-                </action>
-
-                <action id="aXTR_FO_TRNWH" package="MX::Action::ExecuteCmd">
-                        <param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-FO-TRNWH"></param>
-                </action>
-
-                <action id="aXTR_FO_TRNWH_V" package="MX::Action::ExecuteCmd">
-                        <param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-FO-TRNWH-V"></param>
-                </action>
-
-                <action id="aXTR_FO_WWR" package="MX::Action::ExecuteCmd">
-                        <param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-FO-WWR"></param>
-                </action>
-
-                <action id="aXTR_FO_WWR_V" package="MX::Action::ExecuteCmd">
-                        <param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-FO-WWR-V"></param>
-                </action>
-
-	</state>
-
-	<state id="sEXTRACT14" mode="sequence">
-		<action id="aXTR_RECGICM" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="sleep 70;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-RECGICM"></param>
-		</action>
-
-		<action id="aXTC_CTPMX" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTC-CTPMX"></param>
-		</action>
-
-		<action id="aXTC_DTCCCTRL" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTC-DTCCCTRL"></param>
-		</action>
-
-		<action id="aXTR_XTR_SATRLD_OLD" package="MX::Action::ExecuteCmd"> 
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-SATRLD-OLD"></param>
-		</action>
-
-		<action id="aXTR_XTR_FUTCSD_OLD" package="MX::Action::ExecuteCmd"> 
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-FUTCSD-OLD"></param>
-		</action>
-
-		<action id="aXTR_XTR_FUTCSM_OLD" package="MX::Action::ExecuteCmd"> 
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-FUTCSM-OLD"></param>
-		</action>
-
-		<action id="aXTR_XTR_SATPRD_OLD" package="MX::Action::ExecuteCmd"> 
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-SATPRD-OLD"></param>
-		</action>
-
-		<action id="aXTR_XTR_SATPRM_OLD" package="MX::Action::ExecuteCmd"> 
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-SATPRM-OLD"></param>
-		</action>
-
-		<action id="aXTR_XTR_SATRLM_OLD" package="MX::Action::ExecuteCmd"> 
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-SATRLM-OLD"></param>
-		</action>
-		
-	</state>
-	
-	<state id="sEXTRACT15" mode="sequence">
-		<action id="aXTR_XTR_SAT_REAL_M" package="MX::Action::ExecuteCmd"> 
-			<param name="cmd" value="sleep 75;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-SAT-REAL-M"></param>
-		</action>
-		
-		<action id="aXTR_XTR_SAT_REAL_EXC_D" package="MX::Action::ExecuteCmd"> 
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-SAT-REAL-EXC-D"></param>
-		</action>	
-		
-		<action id="aXTR_XTR_SAT_REAL_EXC_M" package="MX::Action::ExecuteCmd"> 
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-SAT-REAL-EXC-M"></param>
-		</action>
-		
-		<action id="aXTR_XTR_LCHCPTY_D" package="MX::Action::ExecuteCmd"> 
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-LCHCPTY-D"></param>
-		</action>	
-
-		<action id="aXTR_XTR_LCHCPTY_M" package="MX::Action::ExecuteCmd"> 
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-LCHCPTY-M"></param>
-		</action>
-		
-		<action id="aXTR_XTR_FUTCS_D" package="MX::Action::ExecuteCmd"> 
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-FUTCS-D"></param>
-		</action>	
-		
-		<action id="aXTR_XTR_FUTCS_M" package="MX::Action::ExecuteCmd"> 
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-FUTCS-M"></param>
-		</action>	
-		
-		<action id="aXTR_XTR_M_LNBCD_D" package="MX::Action::ExecuteCmd"> 
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-M-LNBCD-D"></param>
-		</action>	
-		
-		<action id="aXTR_XTR_M_LNBCD_M" package="MX::Action::ExecuteCmd"> 
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-M-LNBCD-M"></param>
-		</action>
-
-		<action id="aXTR_XTR_M_REPO_D" package="MX::Action::ExecuteCmd"> 
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-M-REPO-D"></param>
-		</action>
-		
-		<action id="aXTR_XTR_M_REPO_M" package="MX::Action::ExecuteCmd"> 
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-M-REPO-M"></param>
-		</action>	
-		
-		<action id="aXTR_XTR_SAT_PREM_D" package="MX::Action::ExecuteCmd"> 
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-SAT-PREM-D"></param>
-		</action>
-		
-		<action id="aXTR_XTR_SAT_PREM_M" package="MX::Action::ExecuteCmd"> 
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-SAT-PREM-M"></param>
-		</action>
-		
-		<action id="aXTR_FIXING_RISK" package="MX::Action::ExecuteCmd"> 
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-FIXING-RISK"></param>
-		</action>	
-	</state>
-	
-	<state id="sEXTRACT16" mode="sequence">
-	   <action id="aXTR_INSTR_KVAR" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="sleep 80;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-INSTR-KVAR"></param>
-		</action>
-		<action id="aXTR_EQSVAR" package="MX::Action::ExecuteCmd"> 
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-EQSVAR"></param>
-		</action>	 
-
-		<action id="aXTR_BBG" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-BBG "></param>
-		</action>
-
-		<action id="aDEL_DIV_BEFORE" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="$MXBIN/RPT/IT/DeletedDivided.pl"></param>
-		</action>
-
-		<action id="aSP_MUL_CUR_BSK_DIV" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY -d $DBBASE -s 'exec MUREXDB.sp_MUL_CUR_BSK_DIV_AFTER'"></param>
-		</action>
-
-		<action id="aDEL_DIV_AFTER" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="$MXBIN/RPT/IT/DeletedDivided.pl"></param>
-		</action>
-	</state>
-	
-	<state id="sEXTRACT17" mode="sequence">
-	    <action id="aXTR_FO_CSWH" package="MX::Action::ExecuteCmd">
-                        <param name="cmd" value="sleep 85;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-FO-CSWH"></param>
-                </action>
-
-                <action id="aXTR_FO_CSWH_V" package="MX::Action::ExecuteCmd">
-                        <param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-FO-CSWH-V"></param>
-                </action>
-
-                <action id="aXTR_FO_GREEKS" package="MX::Action::ExecuteCmd">
-                        <param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-FO-GREEKS"></param>
-                </action>
-
-                <action id="aXTR_FO_LBEVT" package="MX::Action::ExecuteCmd">
-                        <param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-FO-LBEVT"></param>
-                </action>
-
-                <action id="aXTR_FO_MRCOM_GRK" package="MX::Action::ExecuteCmd">
-                        <param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-FO-MRCOM-GRK"></param>
-                </action>
-
-		<action id="aXTC_BONDPAY" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTC-BONDPAY"></param>
-		</action>
-
-		<action id="aXTR_MFD2_LD_FX" package="MX::Action::ExecuteCmd">
-		        <param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-MFD2-LD-FX"></param>
-		</action>
-
-		<action id="aXTR_MFD2_LD_IR" package="MX::Action::ExecuteCmd">
-		        <param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-MFD2-LD-IR"></param>
-		</action>
-
-		<action id="aXTR_MFD2_LD_CS" package="MX::Action::ExecuteCmd">
-		        <param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-MFD2-LD-CS"></param>
-		</action>
-
-		<action id="aXTR_MFD2_LD_BD" package="MX::Action::ExecuteCmd">
-		        <param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-MFD2-LD-BD"></param>
-		</action>
-
-		<action id="aXTR_MFD2_LD_EQUIT" package="MX::Action::ExecuteCmd">
-		        <param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-MFD2-EQUIT"></param>
-		</action>
-
-		<action id="aXTR_MFD2_LD_EQS" package="MX::Action::ExecuteCmd">
-		        <param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-MFD2-EQS"></param>
-		</action>
-		<action id="aXTR_CANDEAL" package="MX::Action::ExecuteCmd">
-				<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-CANDEAL"></param>
-        </action>
-
-	</state>
-	
-	<state id="sEXTRACT_ACU_RECON1" mode="sequence">
-		<action id="aXTR_RC211_FX" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="sleep 90;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-RC211-FX"/>
-		</action>
-		<action id="aXTR_RC211_LST" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-RC211-LST"/>
-		</action>
-	</state>
-    
-	<state id="sEXTRACT_ACU_RECON2" mode="sequence">
-	   <action id="aXTR_RC211_IRD" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="sleep 95;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-RC211-IRD"/>
-		</action>
-		<action id="aXTR_VAR_RC211" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-VAR-RC211"></param>
-		</action>
-		<action id="aXTR_VAR_MVT211" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-XTR-VAR-MVT211"></param>
-		</action>
-	</state>
-
-	<state id="sEXTRACT_VAR" mode="sequence">
-	     <action id="aXTR_VAR_CEGA" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="sleep 100;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-PS-BXTR-TAYLOR-CEGA"/>
-		</action>
-		<action id="aXTR_VAR_COM" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-PS-BXTR-TAYLOR-COM"/>
-		</action>
-		<action id="aXTR_VAR_CRD" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-PS-BXTR-TAYLOR-CRD"/>
-		</action>
-		<action id="aXTR_VAR_FX" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-PS-BXTR-TAYLOR-FX"/>
-		</action>
-		<action id="aXTR_VAR_IRD" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-PS-BXTR-TAYLOR-IRD"/>
-		</action>
-		<action id="aXTR_VAR_MV" package="MX::Action::ExecuteCmd">
-			<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-PS-BXTR-TAYLOR-MV"/>
-		</action>
-	</state>	
-
-    <state id="sDM_TRUNCATE_TABLES" mode="parallel">
-	  <action id="aDM_TRUNCATE_DEAL_PCK" package="MX::Action::ExecuteCmd">
-		 <param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY -d $DBBASE -s 'exec MUREXDB.sp_DM_TRUNCATE_DEAL_PCK 'Y''"></param>
-	  </action>
-	
-	  <action id="aDM_TRUNCATE_DM_COM" package="MX::Action::ExecuteCmd">
-		  <param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_VAR -d $DBBASE_VAR -u $DBADMINRI_VAR -p $DBADMINRI_VARPASS -s 'exec sp_DM_TRUNCATE_DM_COM 'Y''"></param>
-	  </action>
-    </state>
-  </state>
-
-  <state id="sWORKFLOW_RESET" mode="parallel">
-	<action id="aODS_RESET_DATE" package="MX::Action::ExecuteCmd">
-		<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_ODS_RESET_DATE'"></param>
-	</action>
-  </state>
-
-  <state id="sMARKER_END" mode="sequence">
-	<action id="aMARKER_END" package="MX::Action::ExecuteCmd">
-		<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-WF-EOD-EXTRACT-DAILY-END"></param>
-	</action>
-  </state>
-
-  <state id="sEMAIL_END" mode="parallel">
-	<action id="aEMAIL_END" package="MX::Action::ExecuteCmd">
-		<param name="cmd" value="cat /dev/null | mailx -s'DATAMART - EOD EXTRACTS - Done' $DATAMART_MAILTO"></param>
-	</action>
-
-        <action id="aNAGIOS_STOP" package="MX::Action::ExecuteCmd">
-                <param name="cmd" value="$MXBIN/TOOLS/NAGIOS/nagios_msg.sh I 'DATAMART - EOD EXTRACTS DAILY' wf_eod_extract_daily.xml 00"></param>
-        </action>
-  </state>
-
-</state>
 </workflow>
 
 

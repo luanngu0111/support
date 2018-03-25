@@ -1,60 +1,647 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <workflow xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
  xsi:noNamespaceSchemaLocation="workflow.xsd" id="POST_EOD">
-	<state id="sFEED_STG_CS" mode="sequence">
+	<state id="sSTG_FEED_DYN_TABLE" mode="parallel">
 
-		<state id="sFEED_STG_CS_MAIN" mode="parallel">
+		<state id="sSTG_FEED_DEAL" mode="sequence">
 
-			<state id="sFEED_STG_CS_P_TODAY" mode="parallel">
-				<action id="aFEED_STG_CS_P_TODAY" package="MX::Action::ExecuteCmd">
-					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-CS-P-TODAY"/>
+			<state id="sSTG_FEED_SQL_DEAL_EXCEPT" mode="sequence">
+				<action id="aSTG_FEED_DEAL_EXCEPT" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="sleep 10;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-DEAL-EXCEPT"/>
+				</action>
+
+				<action id="aSTG_FEED_DEAL_EXCEPT_INDEX" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_CREATE_INDEX 'Y', 'STG_DEAL_EXCEPT_REP''"/>
 				</action>
 			</state>
 
-			<state id="sFEED_STG_CS_D_TODAY" mode="parallel">
-				<action id="STG_CS_D_TODAY_01" package="MX::Action::ExecuteCmd">
-					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-CS-D-TODAY-01"/>
+			<state id="sSTG_FEED_SQL_DEALCDS" mode="sequence">
+				<action id="aSTG_FEED_DEALCDS" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-DEALCDS"/>
 				</action>
 
-				<action id="STG_CS_D_TODAY_02" package="MX::Action::ExecuteCmd">
-					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-CS-D-TODAY-02"/>
-				</action>
-
-				<action id="STG_CS_D_TODAY_03" package="MX::Action::ExecuteCmd">
-					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-CS-D-TODAY-03"/>
-				</action>
-
-				<action id="STG_CS_D_TODAY_04" package="MX::Action::ExecuteCmd">
-					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-CS-D-TODAY-04"/>
+				<action id="aSTG_FEED_DEALCDS_INDEX" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_CREATE_INDEX 'Y', 'STG_DEALCDS_REP''"/>
 				</action>
 			</state>
 
-			<state id="sFEED_STG_CS_P_YEST" mode="parallel">
-				<action id="aFEED_STG_CS_P_YEST" package="MX::Action::ExecuteCmd">
-					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-CS-P-YST"/>
+			<state id="sSTG_FEED_SQL_DEALCOM" mode="sequence">
+				<action id="aSTG_FEED_DEALCOM" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-DEALCOM"/>
+				</action>
+
+				<action id="aSTG_FEED_DEALCOM_INDEX" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_CREATE_INDEX 'Y', 'STG_DEALCOM_REP''"/>
 				</action>
 			</state>
 
-			<state id="sFEED_STG_CS_D_YEST" mode="parallel">
-				<action id="STG_CS_D_YEST_01" package="MX::Action::ExecuteCmd">
-					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-CS-D-YEST-01"/>
+			<state id="sSTG_FEED_SQL_DEALCRD" mode="sequence">
+				<action id="aSTG_FEED_DEALCRD" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-DEALCRD"/>
 				</action>
 
-				<action id="STG_CS_D_YEST_02" package="MX::Action::ExecuteCmd">
-					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-CS-D-YEST-02"/>
-				</action>
-
-				<action id="STG_CS_D_YEST_03" package="MX::Action::ExecuteCmd">
-					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-CS-D-YEST-03"/>
+				<action id="aSTG_FEED_DEALCRD_INDEX" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_CREATE_INDEX 'Y', 'STG_DEALCRD_REP''"/>
 				</action>
 			</state>
 
+			<state id="sSTG_FEED_SQL_DEALCURR" mode="sequence">
+				<action id="aSTG_FEED_DEALCURR" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-DEALCURR"/>
+				</action>
+
+				<action id="aSTG_FEED_DEALCURR_INDEX" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_CREATE_INDEX 'Y', 'STG_DEALCURR_REP''"/>
+				</action>
+			</state>
+
+			<state id="sSTG_FEED_SQL_DEALEQD" mode="sequence">
+				<action id="aSTG_FEED_DEALEQD" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-DEALEQD"/>
+				</action>
+
+				<action id="aSTG_FEED_DEALEQD_INDEX" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_CREATE_INDEX 'Y', 'STG_DEALEQD_REP''"/>
+				</action>
+			</state>
+
+			<state id="sSTG_FEED_SQL_DEALHDR" mode="sequence">
+				<action id="aSTG_FEED_DEALHDR" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-DEALHDR"/>
+				</action>
+
+				<action id="aSTG_FEED_DEALHDR_INDEX" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_CREATE_INDEX 'Y', 'STG_DEALHDR_REP''"/>
+				</action>
+			</state>
+
+			<state id="sSTG_FEED_SQL_DEALIRD" mode="sequence">
+				<action id="aSTG_FEED_DEALIRD" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-DEALIRD"/>
+				</action>
+
+				<action id="aSTG_FEED_DEALIRD_INDEX" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_CREATE_INDEX 'Y', 'STG_DEALIRD_REP''"/>
+				</action>
+			</state>
+
+			<state id="sSTG_FEED_SQL_DEALLB" mode="sequence">
+				<action id="aSTG_FEED_DEALLB" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-DEALLB"/>
+				</action>
+
+				<action id="aSTG_FEED_DEALLB_INDEX" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_CREATE_INDEX 'Y', 'STG_DEALLB_REP''"/>
+				</action>
+			</state>
+
+			<state id="sSTG_FEED_SQL_DEALOPT" mode="sequence">
+				<action id="aSTG_FEED_DEALOPT" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-DEALOPT"/>
+				</action>
+
+				<action id="aSTG_FEED_DEALOPT_INDEX" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_CREATE_INDEX 'Y', 'STG_DEALOPT_REP''"/>
+				</action>
+			</state>
+
+			<state id="sSTG_FEED_SQL_DEALREPO" mode="sequence">
+				<action id="aSTG_FEED_DEALREPO" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-DEALREPO"/>
+				</action>
+
+				<action id="aSTG_FEED_DEALREPO_INDEX" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_CREATE_INDEX 'Y', 'STG_DEALREPO_REP''"/>
+				</action>
+			</state>
+
+			<state id="sSTG_FEED_SQL_EVENT_LB" mode="sequence">
+				<action id="aSTG_FEED_EVENT_LB" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-EVENT-LB"/>
+				</action>
+
+				<action id="aSTG_FEED_EVENT_LB_INDEX" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_CREATE_INDEX 'Y', 'STG_EVENT_LB_REP''"/>
+				</action>
+			</state>
+
+			<state id="sSTG_FEED_SQL_LOAN" mode="sequence">
+				<action id="aSTG_FEED_LOAN" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-LOAN"/>
+				</action>
+
+				<action id="aSTG_FEED_LOAN_INDEX" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_CREATE_INDEX 'Y', 'STG_LOAN_REP''"/>
+				</action>
+			</state>
+
+			<state id="sSTG_FEED_SQL_LOAN_LEG" mode="sequence">
+				<action id="aSTG_FEED_LOAN_LEG" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-LOAN-LEG"/>
+				</action>
+
+				<action id="aSTG_FEED_LOAN_LEG_INDEX" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_CREATE_INDEX 'Y', 'STG_LOAN_LEG_REP''"/>
+				</action>
+			</state>
+
+			<state id="sSTG_FEED_SQL_MKTOP" mode="sequence">
+				<action id="aSTG_FEED_MKTOP" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-MKTOP"/>
+				</action>
+
+				<action id="aSTG_FEED_MKTOP_INDEX" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_CREATE_INDEX 'Y', 'STG_MKTOP_REP''"/>
+				</action>
+			</state>
+
+			<state id="sSTG_FEED_SQL_SEC_UND" mode="sequence">
+				<action id="aSTG_FEED_SEC_UNC" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-SEC-UNC"/>
+				</action>
+
+				<action id="aSTG_FEED_SEC_UNC_INDEX" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_CREATE_INDEX 'Y', 'STG_SEC_UND_REP''"/>
+				</action>
+			</state>
+
+			<state id="sSTG_FEED_XG" mode="sequence">
+				<action id="aSTG_FEED_XG" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-XG-YEST"/>
+				</action>
+
+				<action id="aSTG_FEED_XG_INDEX" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_CREATE_INDEX 'Y', 'STG_XG_REP''"/>
+				</action>
+			</state>
 		</state>
 
-		<state id="sFEED_STG_CS_INDEX" mode="parallel">
-			<action id="aFEED_STG_CS_INDEX" package="MX::Action::ExecuteCmd">
-				<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_CREATE_INDEX 'Y', 'STG_CS_REP''"/>
+
+		<state id="sSTG_FEED_MV" mode="sequence">
+
+			<state id="sSTG_FEED_MV_MAIN" mode="parallel">
+				<state id="sSTG_FEED_MV_OM" mode="parallel">
+					<action id="aSTG_FEED_MV_OM_01" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-MV-OM-01"/>
+					</action>
+
+					<action id="aSTG_FEED_MV_OM_02" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 1;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-MV-OM-02"/>
+					</action>
+
+					<action id="aSTG_FEED_MV_OM_03" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 2;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-MV-OM-03"/>
+					</action>
+
+					<action id="aSTG_FEED_MV_OM_04" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 3;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-MV-OM-04"/>
+					</action>
+
+					<action id="aSTG_FEED_MV_OM_05" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 4;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-MV-OM-05"/>
+					</action>
+
+					<action id="aSTG_FEED_MV_OM_06" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 5;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-MV-OM-06"/>
+					</action>
+
+					<action id="aSTG_FEED_MV_OM_07" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 6;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-MV-OM-07"/>
+					</action>
+
+					<action id="aSTG_FEED_MV_OM_08" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 7;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-MV-OM-08"/>
+					</action>
+				</state>
+
+				<state id="sSTG_FEED_MV_YEST-1" mode="parallel">
+					<action id="aSTG_FEED_MV_YEST-1_01" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-MV-YEST-1-01"/>
+					</action>
+
+					<action id="aSTG_FEED_MV_YEST-1_02" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 1;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-MV-YEST-1-02"/>
+					</action>
+
+					<action id="aSTG_FEED_MV_YEST-1_03" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 2;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-MV-YEST-1-03"/>
+					</action>
+
+					<action id="aSTG_FEED_MV_YEST-1_04" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 3;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-MV-YEST-1-04"/>
+					</action>
+
+					<action id="aSTG_FEED_MV_YEST-1_05" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 4;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-MV-YEST-1-05"/>
+					</action>
+
+					<action id="aSTG_FEED_MV_YEST-1_06" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 5;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-MV-YEST-1-06"/>
+					</action>
+
+					<action id="aSTG_FEED_MV_YEST-1_07" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 6;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-MV-YEST-1-07"/>
+					</action>
+
+					<action id="aSTG_FEED_MV_YEST-1_08" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 7;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-MV-YEST-1-08"/>
+					</action>
+				</state>
+
+				<state id="sSTG_FEED_MV_YEST" mode="parallel">
+					<action id="aSTG_FEED_MV_YEST_01" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-MV-YEST-01"/>
+					</action>
+
+					<action id="aSTG_FEED_MV_YEST_02" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 1;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-MV-YEST-02"/>
+					</action>
+
+					<action id="aSTG_FEED_MV_YEST_03" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 2;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-MV-YEST-03"/>
+					</action>
+
+					<action id="aSTG_FEED_MV_YEST_04" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 3;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-MV-YEST-04"/>
+					</action>
+
+					<action id="aSTG_FEED_MV_YEST_05" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 4;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-MV-YEST-05"/>
+					</action>
+
+					<action id="aSTG_FEED_MV_YEST_06" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 5;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-MV-YEST-06"/>
+					</action>
+
+					<action id="aSTG_FEED_MV_YEST_07" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 6;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-MV-YEST-07"/>
+					</action>
+
+					<action id="aSTG_FEED_MV_YEST_08" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 7;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-MV-YEST-08"/>
+					</action>
+				</state>
+			</state>
+
+			<state id="sSTG_FEED_MV_INDEX" mode="parallel">
+				<action id="aSTG_FEED_MV_INDEX" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_CREATE_INDEX 'Y', 'STG_MV_REP''"/>
+				</action>
+			</state>
+		</state>
+
+
+		<state id="sSTG_FEED_PL" mode="sequence">
+
+			<state id="sSTG_FEED_PL_MAIN" mode="parallel">
+
+				<state id="sSTG_FEED_PL_OM" mode="parallel">
+					<action id="aSTG_FEED_PL_OM_01" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-PL-OM-01"/>
+					</action>
+
+					<action id="aSTG_FEED_PL_OM_02" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 1;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-PL-OM-02"/>
+					</action>
+
+					<action id="aSTG_FEED_PL_OM_03" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 2;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-PL-OM-03"/>
+					</action>
+
+					<action id="aSTG_FEED_PL_OM_04" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 3;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-PL-OM-04"/>
+					</action>
+
+					<action id="aSTG_FEED_PL_OM_05" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 4;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-PL-OM-05"/>
+					</action>
+
+					<action id="aSTG_FEED_PL_OM_06" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 5;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-PL-OM-06"/>
+					</action>
+
+					<action id="aSTG_FEED_PL_OM_07" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 6;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-PL-OM-07"/>
+					</action>
+
+					<action id="aSTG_FEED_PL_OM_08" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 7;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-PL-OM-08"/>
+					</action>
+
+					<action id="aSTG_FEED_PL_OM_09" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 8;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-PL-OM-09"/>
+					</action>
+
+					<action id="aSTG_FEED_PL_OM_10" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 9;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-PL-OM-10"/>
+					</action>
+				</state>
+
+
+				<state id="sSTG_FEED_PL_YEST-1" mode="parallel">
+					<action id="aSTG_FEED_PL_YEST-1_01" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-PL-YEST-1-01"/>
+					</action>
+
+					<action id="aSTG_FEED_PL_YEST-1_02" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 1;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-PL-YEST-1-02"/>
+					</action>
+
+					<action id="aSTG_FEED_PL_YEST-1_03" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 2;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-PL-YEST-1-03"/>
+					</action>
+
+					<action id="aSTG_FEED_PL_YEST-1_04" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 3;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-PL-YEST-1-04"/>
+					</action>
+
+					<action id="aSTG_FEED_PL_YEST-1_05" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 4;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-PL-YEST-1-05"/>
+					</action>
+
+					<action id="aSTG_FEED_PL_YEST-1_06" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 5;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-PL-YEST-1-06"/>
+					</action>
+
+					<action id="aSTG_FEED_PL_YEST-1_07" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 6;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-PL-YEST-1-07"/>
+					</action>
+
+					<action id="aSTG_FEED_PL_YEST-1_08" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 7;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-PL-YEST-1-08"/>
+					</action>
+
+					<action id="aSTG_FEED_PL_YEST-1_09" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 8;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-PL-YEST-1-09"/>
+					</action>
+				</state>
+
+				<state id="sSTG_FEED_PL_YEST" mode="parallel">
+					<action id="aSTG_FEED_PL_YEST_01" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-PL-YEST-01"/>
+					</action>
+
+					<action id="aSTG_FEED_PL_YEST_02" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 1;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-PL-YEST-02"/>
+					</action>
+
+					<action id="aSTG_FEED_PL_YEST_03" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 2;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-PL-YEST-03"/>
+					</action>
+
+					<action id="aSTG_FEED_PL_YEST_04" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 3;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-PL-YEST-04"/>
+					</action>
+
+					<action id="aSTG_FEED_PL_YEST_05" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 4;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-PL-YEST-05"/>
+					</action>
+
+					<action id="aSTG_FEED_PL_YEST_06" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 5;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-PL-YEST-06"/>
+					</action>
+
+					<action id="aSTG_FEED_PL_YEST_07" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 6;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-PL-YEST-07"/>
+					</action>
+
+					<action id="aSTG_FEED_PL_YEST_08" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 7;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-PL-YEST-08"/>
+					</action>
+
+					<action id="aSTG_FEED_PL_YEST_09" package="MX::Action::ExecuteCmd">
+						<param name="cmd" value="sleep 8;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-PL-YEST-09"/>
+					</action>
+				</state>
+			</state>
+
+			<state id="sSTG_FEED_PL_INDEX" mode="parallel">
+				<action id="aSTG_FEED_PL_INDEX" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_CREATE_INDEX 'Y', 'STG_PL_REP''"/>
+				</action>
+			</state>
+		</state>
+
+
+		<state id="sSTG_FEED_TRADE" mode="sequence">
+			<state id="sSTG_FEED_TRADE_DYN" mode="parallel">
+				<action id="aSTG_FEED_TRADE_01" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-TRADE-01"/>
+				</action>
+
+				<action id="aSTG_FEED_TRADE_02" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="sleep 1;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-TRADE-02"/>
+				</action>
+
+				<action id="aSTG_FEED_TRADE_03" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="sleep 2;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-TRADE-03"/>
+				</action>
+
+				<action id="aSTG_FEED_TRADE_04" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="sleep 3;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-TRADE-04"/>
+				</action>
+
+				<action id="aSTG_FEED_TRADE_05" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="sleep 4;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-TRADE-05"/>
+				</action>
+
+				<action id="aSTG_FEED_TRADE_06" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="sleep 5;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-TRADE-06"/>
+				</action>
+
+				<action id="aSTG_FEED_TRADE_07" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="sleep 6;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-TRADE-07"/>
+				</action>
+
+				<action id="aSTG_FEED_TRADE_08" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="sleep 7;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-TRADE-08"/>
+				</action>
+
+				<action id="aSTG_FEED_TRADE_09" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="sleep 8;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-TRADE-09"/>
+				</action>
+			</state>
+
+			<state id="sSTG_FEED_TRADE_INDEX" mode="parallel">
+				<action id="aSTG_FEED_TRADE_INDEX" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_CREATE_INDEX 'Y', 'STG_TRADE_REP''"/>
+				</action>
+			</state>
+		</state>
+
+
+		<state id="sSTG_FEED_DT" mode="sequence">
+
+			<state id="sSTG_FEED_DT_YEST_DYN" mode="parallel">
+				<action id="aSTG_DT_YEST_01" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-DT-YEST-01"/>
+				</action>
+
+				<action id="aSTG_DT_YEST_02" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="sleep 1;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-DT-YEST-02"/>
+				</action>
+
+				<action id="aSTG_DT_YEST_03" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="sleep 2;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-DT-YEST-03"/>
+				</action>
+
+				<action id="aSTG_DT_YEST_04" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="sleep 3;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-DT-YEST-04"/>
+				</action>
+
+				<action id="aSTG_DT_YEST_05" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="sleep 4;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-DT-YEST-05"/>
+				</action>
+
+				<action id="aSTG_DT_YEST_06" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="sleep 5;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-DT-YEST-06"/>
+				</action>
+
+				<action id="aSTG_DT_YEST_07" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="sleep 6;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-DT-YEST-07"/>
+				</action>
+
+				<action id="aSTG_DT_YEST_08" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="sleep 7;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-DT-YEST-08"/>
+				</action>
+			</state>
+
+			<state id="sSTG_FEED_DT_INDEX" mode="parallel">
+				<action id="aSTG_FEED_DT_INDEX" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_CREATE_INDEX 'Y', 'STG_DT_REP''"/>
+				</action>
+			</state>
+		</state>
+
+
+		<state id="sSTG_FEED_GREEKS" mode="sequence">
+			<state id="sSTG_FEED_GREEKS_DYN" mode="parallel">
+				<action id="aSTG_FEED_GREEKS_01" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-GREEK-YEST-01"/>
+				</action>
+
+				<action id="aSTG_FEED_GREEKS_02" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="sleep 1;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-GREEK-YEST-02"/>
+				</action>
+
+				<action id="aSTG_FEED_GREEKS_03" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="sleep 2;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-GREEK-YEST-03"/>
+				</action>
+
+				<action id="aSTG_FEED_GREEKS_04" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="sleep 3;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-GREEK-YEST-04"/>
+				</action>
+
+				<action id="aSTG_FEED_GREEKS_05" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="sleep 4;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-GREEK-YEST-05"/>
+				</action>
+			</state>
+
+			<state id="sSTG_FEED_GREEKS_INDEX" mode="parallel">
+				<action id="aSTG_FEED_GREEKS_INDEX" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_CREATE_INDEX 'Y', 'STG_GREEKS_REP''"/>
+				</action>
+			</state>
+		</state> 
+
+		<state id="sSTG_FEED_GREEKS_COM" mode="sequence"> 
+			<state id="sSTG_FEED_DYN_GREEKS_COM" mode="parallel">
+				<action id="aSTG_FEED_GREEKS_COM_01" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-GRKCOM-Y-01"/>
+				</action>
+
+				<action id="aSTG_FEED_GREEKS_COM_02" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-GRKCOM-Y-02"/>
+				</action>
+
+				<action id="aSTG_FEED_GREEKS_FXCOM_01" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="sleep 120;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-GRKFXC-Y-01"/>
+				</action>
+
+				<action id="aSTG_FEED_GREEKS_FXCOM_02" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="sleep 121;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-GRKFXC-Y-02"/>
+				</action>
+
+				<action id="aSTG_FEED_GREEKS_IRCOM_01" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="sleep 122;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-GRKIRC-Y-01"/>
+				</action>
+
+				<action id="aSTG_FEED_GREEKS_IRCOM_02" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="sleep 123;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-GRKIRC-Y-02"/>
+				</action>
+			</state>
+
+			<state id="sSTG_FEED_GREEKS_INDEX_COM" mode="parallel">
+				<action id="aSTG_FEED_GREEKS_COM_INDEX" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_CREATE_INDEX 'Y', 'STG_GREEKS_COM_REP''"/>
+				</action>
+
+				<action id="aSTG_FEED_GREEKS_FXCOM_INDEX" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_CREATE_INDEX 'Y', 'STG_GREEKS_FXCOM_REP''"/>
+				</action>
+
+				<action id="aSTG_FEED_GREEKS_IRCOM_INDEX" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_CREATE_INDEX 'Y', 'STG_GREEKS_IRCOM_REP''"/>
+				</action>
+			</state>
+		</state>
+
+		<state id="sSTG_FEED_GREEKS_EQD" mode="sequence"> 
+			<action id="aSTG_FEED_GREEKS_EQD" package="MX::Action::ExecuteCmd">
+				<param name="cmd" value="sleep 500;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-GRKEQD-Y"/>
 			</action>
 		</state>
+
+
+		<state id="sSTG_FEED_CS" mode="sequence">
+			<state id="sSTG_FEED_CS_YEST_DYN" mode="parallel">
+				<action id="aSTG_FEED_CS_YEST_01" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-CS-YEST-01"/>
+				</action>
+
+				<action id="aSTG_FEED_CS_YEST_02" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="sleep 1;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-CS-YEST-02"/>
+				</action>
+
+				<action id="aSTG_FEED_CS_YEST_03" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="sleep 2;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-CS-YEST-03"/>
+				</action>
+
+				<action id="aSTG_FEED_CS_YEST_04" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="sleep 3;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-CS-YEST-04"/>
+				</action>
+
+				<action id="aSTG_FEED_CS_YEST_05" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="sleep 4;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-CS-YEST-05"/>
+				</action>
+
+				<action id="aSTG_FEED_CS_YEST_06" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="sleep 5;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-CS-YEST-06"/>
+				</action>
+
+				<action id="aSTG_FEED_CS_YEST_07" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="sleep 6;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-CS-YEST-07"/>
+				</action>
+
+				<action id="aSTG_FEED_CS_YEST_08" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="sleep 7;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-CS-YEST-08"/>
+				</action>
+
+				<action id="aSTG_FEED_CS_YEST_09" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="sleep 8;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-CS-YEST-09"/>
+				</action>
+
+				<action id="aSTG_FEED_CS_YEST_10" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="sleep 9;$MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-CS-YEST-10"/>
+				</action>
+			</state>
+
+			<state id="sSTG_FEED_CS_INDEX" mode="parallel">
+				<action id="aSTG_FEED_CS_INDEX" package="MX::Action::ExecuteCmd">
+					<param name="cmd" value="$MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_CREATE_INDEX 'Y', 'STG_CS_REP''"/>
+				</action>
+			</state>
+		</state>
 	</state>
+
 </workflow>
