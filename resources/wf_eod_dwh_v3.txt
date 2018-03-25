@@ -1,18 +1,6 @@
-*** Rerun action : aSTG_FEED_DEALCDS Command : $MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-DEALCDS
+*** Rerun action : aSTG_FEED_DEALCRD Command : $MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-DEALCRD
 
 --- NEXT STEP ---
-
-aSTG_FEED_DEALCDS_INDEX = $MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_CREATE_INDEX 'Y', 'STG_DEALCDS_REP''
-
-state : sSTG_FEED_SQL_DEALCOM  
-
-aSTG_FEED_DEALCOM = $MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-DEALCOM
-
-aSTG_FEED_DEALCOM_INDEX = $MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_CREATE_INDEX 'Y', 'STG_DEALCOM_REP''
-
-state : sSTG_FEED_SQL_DEALCRD  
-
-aSTG_FEED_DEALCRD = $MXBIN/TOOLS/MUREX/Launchers/mx_launch_ps.pl DM-BFS-DEALCRD
 
 aSTG_FEED_DEALCRD_INDEX = $MXBIN/TOOLS/SQL/sql_launcher -z $DSQUERY_DM -d $DBDATAMART -s 'exec sp_STG_CREATE_INDEX 'Y', 'STG_DEALCRD_REP''
 

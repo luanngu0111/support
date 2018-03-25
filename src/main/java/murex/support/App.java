@@ -22,11 +22,15 @@ public class App {
 	static Tree<String> root = new Tree<String>("workflow");
 	static Tree<String> first = root;
 	static String FILENAME = "resources/wf_eod_dwh_v3.txt";
-
+	static Workflow wf = new Workflow();
 
 	public static void main(String[] args) {
+		ProceedWorkflow();
 
-		String wf_name = path.substring(path.lastIndexOf("/")+1,path.lastIndexOf("."));
+	}
+
+	public static void ConvertXmlToTree() {
+		String wf_name = path.substring(path.lastIndexOf("/") + 1, path.lastIndexOf("."));
 		try {
 
 			File fXmlFile = new File(path);
@@ -39,11 +43,11 @@ public class App {
 			NodeList nList = doc.getElementsByTagName("state");
 			root.data = doc.getDocumentElement().getAttribute("id");
 			System.out.println("----------------------------");
-			Workflow wf = new Workflow();
+
 			wf._root = first;
 			wf.workflow_name = wf_name;
 			for (Node nNode = nList.item(0); nNode.getNextSibling() != null; nNode = nNode.getNextSibling()) {
-				
+
 				System.out.println("\nCurrent Element :" + nNode.getNodeName());
 				// if (nNode.getNodeType() == Node.ELEMENT_NODE) {
 
@@ -53,18 +57,20 @@ public class App {
 				System.out.println("Mode: " + eElement.getAttribute("mode"));
 				wf.attach(first, nNode);
 			}
-			// Processing
-			
-			System.out.println("------------------------Print Action-----------------------------");
-			wf.Draw("aSTG_FEED_DEALCDS");
-			WriteFile(wf._result);
+
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
-	
-	public static void WriteFile(String output)
-	{
+
+	public static void ProceedWorkflow() {
+		ConvertXmlToTree();
+		System.out.println("------------------------Print Action-----------------------------");
+		wf.Draw("aSTG_FEED_DEALCRD");
+		WriteFile(wf._result);
+	}
+
+	public static void WriteFile(String output) {
 		BufferedWriter bw = null;
 		FileWriter fw = null;
 
@@ -98,6 +104,5 @@ public class App {
 
 		}
 	}
-	
-	
+
 }

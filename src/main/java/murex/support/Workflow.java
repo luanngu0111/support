@@ -1,5 +1,8 @@
 package murex.support;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
@@ -187,5 +190,48 @@ public class Workflow {
 		Draw(tree.next, action);
 		// space = space.substring(0, space.length() - 1);
 		return space;
+	}
+
+	public String ExtractCommand(String action) {
+		return ExtractCommand(this._root, action);
+	}
+
+	public String ExtractCommand(Tree<String> tree, String action) {
+		String result = "";
+		if (tree == null) {
+			return result;
+		}
+		if (tree.data.equals(action)) {
+			return tree.command;
+		}
+		if (tree.children != null && tree.children.size() > 0) {
+			for (Tree<String> child : tree.children) {
+				if (child.data.equals(action)) {
+					return child.command;
+				}
+				result = ExtractCommand(child, action);
+			}
+		}
+		result = ExtractCommand(tree.next, action);
+		return result;
+
+	}
+	
+	public List<String> ExtractCommand(String[] actions)
+	{
+		List<String> commands = new ArrayList<String>();
+		for (String action: actions)
+		{
+			
+			commands.add(action+ " = " + ExtractCommand(action));
+		}
+		return commands;
+	}
+	
+	public List<String> ExtractCommand(List<String> actions)
+	{
+		String[] acts = new String[actions.size()];
+		actions.toArray(acts);
+		return ExtractCommand(acts);
 	}
 }
