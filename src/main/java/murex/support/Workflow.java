@@ -235,7 +235,7 @@ public class Workflow {
 	public List<String> ExtractCommand(List<String> actions)
 	{
 		String[] acts = new String[actions.size()];
-		actions.toArray(acts);
+		acts = actions.toArray(acts);
 		return ExtractCommand(acts);
 	}
 }

@@ -312,6 +312,28 @@ public class ReadLog {
 		}
 	}
 
+	public static void ExtractLogInfo(String input_path, String outputfile) {
+		try {
+			File dir = new File(input_path);
+			File[] directoryListing = dir.listFiles();
+			if (dir.isDirectory()) {
+				if (directoryListing != null) {
+					for (File child : directoryListing) {
+						// Do something with child
+
+						execute(child.getAbsolutePath(), outputfile);
+					}
+				}
+			} else if (dir.isFile()) {
+				execute(dir.getAbsolutePath(), outputfile);
+			}
+
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 		try {
