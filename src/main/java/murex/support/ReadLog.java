@@ -194,6 +194,15 @@ public class ReadLog {
 		}
 	}
 
+	public static LOGFILE extractInfo(LOGFILE log, String s, String state_action) {
+		if ("action".equals(state_action)) {
+			return extractInfoAction(log, s);
+		} else if ("state".equals(state_action)) {
+			return extractInfoState(log, s);
+		}
+		return null;
+	}
+
 	public static LOGFILE extractInfoState(LOGFILE log, String s) {
 
 		if (s.contains(LOGFILE.start_state_string)) {
@@ -255,18 +264,18 @@ public class ReadLog {
 
 	}
 
-	public static void execute(String inputfile, String outputfile) throws IOException {
+	public static void execute(String inputfile, String outputfile, String state_action) throws IOException {
 		LinkedHashMap<String, LOGFILE> logs = new LinkedHashMap<String, ReadLog.LOGFILE>();
 		String pattern = ".*(\\d{8}).*";
 		String eod_date = matchString(inputfile, pattern);
 		List<String> content = readFile(inputfile);
 		for (String line : content) {
 			LOGFILE log = new LOGFILE();
-			log = extractInfoState(log, line);
+			log = extractInfo(log, line, state_action);
 			String key = log.getACTION();
 			if (logs.containsKey(key)) {
 				log = logs.get(key);
-				log = extractInfoState(log, line);
+				log = extractInfo(log, line, state_action);
 				log.setRUNTIME(log.getENDTIME().getTime() - log.getSTARTTIME().getTime());
 				logs.put(key, log);
 			} else if (log.getACTION() != null && !log.getACTION().equals("")) {
@@ -281,7 +290,7 @@ public class ReadLog {
 		try {
 			fw = new FileWriter(outputfile, true);
 			bw = new BufferedWriter(fw);
-			bw.append("EOD Date,State,Start,End,Run time\n");
+			bw.append("EOD Date,State/Action,Start,End,Run time\n");
 			for (Entry entry : set) {
 				LOGFILE log = (LOGFILE) entry.getValue();
 				System.out.println(log.getACTION() + ";" + log.getSTARTTIME_formatted() + ";"
@@ -312,7 +321,7 @@ public class ReadLog {
 		}
 	}
 
-	public static void ExtractLogInfo(String input_path, String outputfile) {
+	public static void ExtractLogInfo(String input_path, String outputfile, String state_action) {
 		try {
 			File dir = new File(input_path);
 			File[] directoryListing = dir.listFiles();
@@ -321,11 +330,11 @@ public class ReadLog {
 					for (File child : directoryListing) {
 						// Do something with child
 
-						execute(child.getAbsolutePath(), outputfile);
+						execute(child.getAbsolutePath(), outputfile, state_action);
 					}
 				}
 			} else if (dir.isFile()) {
-				execute(dir.getAbsolutePath(), outputfile);
+				execute(dir.getAbsolutePath(), outputfile, state_action);
 			}
 
 		} catch (IOException e) {
@@ -336,21 +345,21 @@ public class ReadLog {
 
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
-		try {
-			File dir = new File("resources/logs/");
-			File[] directoryListing = dir.listFiles();
-			if (directoryListing != null) {
-				for (File child : directoryListing) {
-					// Do something with child
-
-					execute(child.getAbsolutePath(), "resources/wf_eod_live_stats.csv");
-				}
-			}
-
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		// try {
+		// File dir = new File("resources/logs/");
+		// File[] directoryListing = dir.listFiles();
+		// if (directoryListing != null) {
+		// for (File child : directoryListing) {
+		// // Do something with child
+		//
+		// execute(child.getAbsolutePath(), "resources/wf_eod_live_stats.csv");
+		// }
+		// }
+		//
+		// } catch (IOException e) {
+		// // TODO Auto-generated catch block
+		// e.printStackTrace();
+		// }
 	}
 
 }

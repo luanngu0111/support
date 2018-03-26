@@ -27,6 +27,7 @@ public class App {
 	static Tree<String> root = new Tree<String>("workflow");
 	static Tree<String> first = root;
 	static String OUTPUT = "resources/wf_eod_dwh_v3.txt";
+	static String WORKFLOW = "resources/wf_eod_dwh.xml";
 	static String crashed_action = "aSTG_FEED_DEALCRD";
 	static Workflow wf = new Workflow();
 
@@ -36,8 +37,8 @@ public class App {
 
 	public static void main(String[] args) {
 		LAUNCHER lch = null;
-		OUTPUT = INPUT.substring(INPUT.lastIndexOf(File.separator) + 1, INPUT.lastIndexOf("."));
-		String path_file = "";
+		OUTPUT = WORKFLOW.substring(WORKFLOW.lastIndexOf(File.separator) + 1, WORKFLOW.lastIndexOf("."));
+		String state_action = "state";
 		Date today = new Date();
 		String timestamp = today.getYear() + "_" + today.getMonth() + "_" + today.getDate();
 		for (int i = 0; i < args.length; i = i + 2) {
@@ -55,14 +56,23 @@ public class App {
 				break;
 			case "-x":
 				lch = LAUNCHER.XTR_CMD;
-				path_file = args[i + 1];
+				INPUT = args[i + 1];
 				break;
 			case "-log":
 				lch = LAUNCHER.XTR_LOG;
-				path_file = args[i + 1];
+				state_action = args[i + 1];
+				break;
+			case "-w":
+				WORKFLOW = args[i + 1];
 				break;
 			default:
-				System.out.println("The parameters is invalid");
+				System.out.println("The parameter is invalid. Please refer to below instruction:\r\n" + 
+						"	-w : specify the workflow file\r\n" + 
+						"	-c : specify the crashed action name\r\n" + 
+						"	-i : input parameter, combine with \"-log\", that's input log file/folder. \r\n" + 
+						"	-o : specify the output file name\r\n" + 
+						"	-x : specify the action/file contains list of actions. This function extracts commands of actions. \r\n" + 
+						"	-log : specify the level extracted. \"state\" or \"action\"");
 				break;
 			}
 		}
@@ -70,10 +80,10 @@ public class App {
 		if (lch == LAUNCHER.RERUN) {
 			ProceedWorkflow();
 		} else if (lch == LAUNCHER.XTR_CMD) {
-			String[] test = ReadFile(path_file);
+			String[] test = ReadFile(INPUT);
 			ExtractCommands(test);
 		} else if (lch == LAUNCHER.XTR_LOG) {
-			ReadLog.ExtractLogInfo(path_file, OUTPUT);
+			ReadLog.ExtractLogInfo(INPUT, OUTPUT, state_action);
 		}
 
 	}
@@ -97,7 +107,6 @@ public class App {
 
 		} catch (IOException e) {
 
-			e.printStackTrace();
 			lst_act.add(path);
 
 		} finally {
@@ -124,11 +133,11 @@ public class App {
 
 	public static void ConvertXmlToTree() {
 		wf = new Workflow();
-		String wf_name = INPUT.substring(INPUT.lastIndexOf("/") + 1, INPUT.lastIndexOf("."));
+		String wf_name = WORKFLOW.substring(WORKFLOW.lastIndexOf("/") + 1, WORKFLOW.lastIndexOf("."));
 
 		try {
 
-			File fXmlFile = new File(INPUT);
+			File fXmlFile = new File(WORKFLOW);
 			DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
 			DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
 			Document doc = dBuilder.parse(fXmlFile);
